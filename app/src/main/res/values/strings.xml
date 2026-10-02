@@ -1,0 +1,546 @@
+<resources>
+    <string name="app_name">Aira</string>
+    <string name="settings">Settings</string>
+    <string name="back">Back</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_timeline">Timeline</string>
+    <string name="tab_calendar">Calendar</string>
+    <string name="tab_insights">Insights</string>
+    <string name="tab_tasks">Tasks</string>
+    <string name="weather_error">Could not load the weather</string>
+    <string name="retry">Retry</string>
+    <string name="humidity">Humidity</string>
+    <string name="uv_index">UV index</string>
+    <string name="wind">Wind</string>
+    <string name="percent">%1$d%%</string>
+
+    <!-- Settings -->
+    <string name="logging">Logging</string>
+    <string name="logging_on">On: Aira records a snapshot in the background</string>
+    <string name="logging_off">Off: nothing is recorded in the background</string>
+    <string name="last_snapshot">Last snapshot: %1$s</string>
+    <string name="never">never</string>
+
+    <string name="generate_demo_data">Generate demo data (debug)</string>
+    <string name="generate_demo_data_summary">Replaces today\'s snapshots with a made-up day</string>
+    <string name="demo_data_added">Demo data added. Check Home and Timeline.</string>
+
+    <!-- Errors and empty screens -->
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_no_location">Location is unavailable. Allow location access and try again.</string>
+    <string name="error_loading">Something went wrong while loading your data. Please try again later.</string>
+    <string name="calendar_month_empty">Nothing was recorded this month.</string>
+    <string name="calendar_no_data">No data</string>
+    <string name="logging_needs_location">Aira has no location permission, so nothing can be recorded.</string>
+    <string name="logging_needs_background">Aira needs location access \"all the time\" to record while the app is closed. Until then nothing is saved in the background.</string>
+    <string name="open_app_settings">Open app settings</string>
+
+    <!-- Notifications -->
+    <string name="channel_weather_alerts">Weather alerts</string>
+    <string name="channel_weather_alerts_description">Warnings about strong sun, heat, rain and falling pressure</string>
+    <string name="channel_task_reminders">Task reminders</string>
+    <string name="channel_task_reminders_description">Reminders for your tasks and warnings about outdoor plans</string>
+    <string name="notif_your_tasks">Your tasks:</string>
+    <string name="notif_task_due">Due now</string>
+    <string name="notif_plan_title">Check your plan</string>
+    <string name="notif_plan_rain">Rain likely at %1$s for \'%2$s\'.</string>
+    <string name="notif_plan_heat">It will feel very hot at %1$s (%2$s) for \'%3$s\'.</string>
+    <string name="notif_plan_better"> Better time: %1$s?</string>
+    <string name="action_add_task">Add task</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="action_done">Done</string>
+    <string name="action_snooze">Snooze 1 h</string>
+    <string name="action_move_to">Move to %1$s</string>
+    <string name="action_keep">Keep</string>
+
+    <!-- Alert settings -->
+    <string name="alert_types">Alert types</string>
+    <string name="alert_cooldown">Time between alerts of the same type</string>
+    <string name="cooldown_hours">%1$d h</string>
+    <string name="alert_type_rain_soon">Rain expected soon</string>
+    <string name="alert_type_rain_now">Raining now</string>
+    <string name="alert_type_heat">Heat</string>
+    <string name="alert_type_strong_sun">Strong sun</string>
+    <string name="alert_type_pressure_drop">Falling pressure</string>
+    <string name="fire_test_alert">Fire test alert: %1$s (debug)</string>
+    <string name="fire_test_alert_summary">Saves an alert and shows its notification now, ignoring the cooldown</string>
+
+    <!-- Tasks redesign -->
+    <string name="tk_next_change">Next Change</string>
+    <string name="tk_change_rain">Rain likely</string>
+    <string name="tk_change_heat">Heat peak</string>
+    <string name="tk_all_clear">All clear</string>
+    <string name="tk_before">Before %1$s</string>
+    <string name="rule_rain_soon">Rain &gt; %1$d%%</string>
+    <string name="rule_rain_now">Raining now</string>
+    <string name="rule_heat">Heat &gt; %1$s</string>
+    <string name="rule_sun">Sun %1$d+ min</string>
+    <string name="rule_pressure">Pressure −%1$d hPa</string>
+    <string name="tk_automated">Automated</string>
+    <plurals name="tk_remaining">
+        <item quantity="one">%1$d remaining</item>
+        <item quantity="other">%1$d remaining</item>
+    </plurals>
+    <string name="tk_active_triggers">Active triggers</string>
+    <plurals name="tk_live">
+        <item quantity="one">%1$d live</item>
+        <item quantity="other">%1$d live</item>
+    </plurals>
+    <string name="tk_alerts_on">Sensors on</string>
+    <string name="tk_all_quiet">All quiet</string>
+    <string name="tk_trigger">Trigger: %1$s</string>
+    <string name="tk_filter_all">All (%1$d)</string>
+    <string name="tk_filter_weather">Weather-linked (%1$d)</string>
+    <string name="tk_filter_today">Today (%1$d)</string>
+    <string name="tk_filter_upcoming">Upcoming (%1$d)</string>
+    <string name="tk_filter_done">Completed (%1$d)</string>
+    <string name="tk_linked">Weather-linked routines</string>
+    <string name="tk_today">Scheduled today</string>
+    <string name="tk_upcoming">Upcoming</string>
+    <string name="tk_completed">Completed tasks (%1$d)</string>
+    <string name="tk_completed_at">Completed %1$s</string>
+    <string name="tk_outdoor">Outdoor</string>
+    <string name="tk_every_time">Every time</string>
+    <string name="tk_new">Create weather task</string>
+    <string name="tk_filter_empty">No tasks here.</string>
+
+    <!-- Tasks tab -->
+    <string name="tasks_empty">No tasks yet. Tap + to add one, or add a suggestion from an alert.</string>
+    <string name="task_add">Add task</string>
+    <string name="task_edit">Edit task</string>
+    <string name="task_title">Title</string>
+    <string name="task_note">Note (optional)</string>
+    <string name="task_remind_when">Remind me when</string>
+    <string name="task_trigger_none">None</string>
+    <string name="task_date">Date</string>
+    <string name="task_time">Time</string>
+    <string name="task_not_set">Not set</string>
+    <string name="task_clear">Clear</string>
+    <string name="task_outdoor">Outdoor task</string>
+    <string name="task_outdoor_hint">Needs a date and time. Aira checks the forecast 3 hours before.</string>
+    <string name="task_repeat">Repeat</string>
+    <string name="task_repeat_once">Once</string>
+    <string name="task_repeat_every_time">Every time</string>
+    <string name="task_delete">Delete</string>
+    <string name="task_snoozed_until">Snoozed until %1$s</string>
+
+    <!-- Settings sections -->
+    <string name="section_profile">Profile</string>
+    <string name="profile_name">Your name</string>
+    <string name="profile_name_hint">Shown in the Home greeting. It stays on this phone.</string>
+    <string name="section_logging">Logging</string>
+    <string name="section_units">Units</string>
+    <string name="section_alerts">Alerts</string>
+    <string name="section_sensors">Sensors</string>
+    <string name="section_data">Data</string>
+    <string name="section_about">About</string>
+    <string name="interval_title">Snapshot interval</string>
+    <string name="interval_minutes">%1$d min</string>
+    <string name="night_pause">Night pause</string>
+    <string name="night_pause_summary">No snapshots from 23:00 to 06:00</string>
+    <string name="battery_saver">Battery saver</string>
+    <string name="battery_saver_summary">Below this level, and not charging, Aira stops reading sensors</string>
+    <string name="percent_value">%1$d%%</string>
+    <string name="use_fahrenheit">Show temperatures in °F</string>
+    <string name="use_fahrenheit_summary">Off: °C. Everything is stored in °C either way.</string>
+    <string name="alerts_enabled">Weather alerts</string>
+    <string name="alerts_enabled_summary">Notify about strong sun, heat, rain and falling pressure (at most once per type every 3 hours)</string>
+    <string name="export_csv">Export data as CSV</string>
+    <string name="export_csv_summary">Save all snapshots to a file you choose</string>
+    <string name="export_failed">Export failed. Try another location.</string>
+    <string name="delete_all_data">Delete all data</string>
+    <string name="delete_all_data_summary">Removes every snapshot, timeline event, note, commute and alert from this phone (tasks are kept)</string>
+    <string name="delete_confirm_title">Delete all data?</string>
+    <string name="delete_confirm_body">This removes all recorded snapshots, events, notes, commutes and alerts. It cannot be undone. Your tasks, settings and places are kept.</string>
+    <string name="delete_confirm_button">Delete</string>
+    <string name="data_deleted">All data deleted.</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_project">Aira is a college project in the Sensor Based Application domain. It records the weather you personally experience. Your data stays on your phone; only a rounded location goes to the free Open-Meteo weather service.</string>
+
+    <!-- Places -->
+    <string name="places">Places</string>
+    <string name="place_home">Home</string>
+    <string name="place_college">College</string>
+    <string name="place_not_set">Not set</string>
+    <string name="place_set_current">Set to current location</string>
+    <string name="place_suggestion_hint">Suggested: %1$.3f, %2$.3f</string>
+    <string name="place_location_failed">Could not get your location. Allow location access and try again.</string>
+
+    <!-- Calendar redesign -->
+    <string name="cal_feels_line">Feels like %1$s · High %2$s / Low %3$s</string>
+    <string name="cal_atmosphere">Atmosphere</string>
+    <string name="atm_calm">Calm</string>
+    <string name="atm_gentle">Gentle breeze</string>
+    <string name="atm_breezy">Breezy</string>
+    <string name="atm_windy">Windy</string>
+    <string name="cal_logged_moments">Logged Moments</string>
+    <string name="cal_rain_label">Rain encounters</string>
+    <string name="cal_no_moments">No moments were logged on this day.</string>
+    <plurals name="cal_times">
+        <item quantity="one">%1$d time</item>
+        <item quantity="other">%1$d times</item>
+    </plurals>
+    <string name="cal_day_empty">No snapshots were recorded on this day.</string>
+
+    <!-- Calendar -->
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="legend_sunny">Sunny</string>
+    <string name="legend_rainy">Rainy</string>
+    <string name="legend_hot">Hot</string>
+    <string name="legend_indoors">Indoors</string>
+
+    <!-- Insights redesign -->
+    <string name="ins_rhythms_week">Weekly rhythms</string>
+    <string name="ins_rhythms_month">Monthly rhythms</string>
+    <string name="ins_rhythms_year">Yearly rhythms</string>
+    <string name="ins_share_week">Share Weekly Summary</string>
+    <string name="ins_share_month">Share Monthly Summary</string>
+    <string name="ins_share_year">Share Yearly Summary</string>
+    <string name="ins_target">Target %1$dm</string>
+    <string name="unit_minutes_short">m</string>
+    <plurals name="ins_total_value">
+        <item quantity="one">%1$d total</item>
+        <item quantity="other">%1$d total</item>
+    </plurals>
+    <string name="ins_events">Events</string>
+    <string name="range_year">Year</string>
+    <string name="ins_previous">Earlier period</string>
+    <string name="ins_next">Later period</string>
+    <string name="ins_daylight_avg">Daylight avg</string>
+    <string name="ins_thermal_peak">Thermal peak</string>
+    <string name="ins_last_week">last week</string>
+    <string name="ins_last_month">last month</string>
+    <string name="ins_last_year">last year</string>
+    <string name="ins_no_earlier">No earlier data</string>
+    <string name="ins_change">%1$+d%% vs %2$s</string>
+    <string name="ins_exposure_title">Atmospheric exposure summary</string>
+    <string name="ins_in_total">In total</string>
+    <string name="ins_total_outdoor">Time outdoors %1$s: %2$s</string>
+    <string name="ins_this_week">this week</string>
+    <string name="ins_this_month">this month</string>
+    <string name="ins_this_year">this year</string>
+    <string name="ins_sun_title">Sunlight Exposure (mins/day)</string>
+    <string name="ins_sun_title_year">Sunlight Exposure (mins/month)</string>
+    <string name="ins_share_heading">Aira weather summary, %1$s</string>
+    <string name="ins_share_sun">Daylight: %1$s a day on average</string>
+    <string name="ins_share_outdoor">Time outdoors: %1$s</string>
+    <string name="ins_share_rain">Rain encounters: %1$d</string>
+    <string name="ins_share_peak">Warmest outdoors: %1$s</string>
+    <string name="ins_share_chooser">Share your weather summary</string>
+    <plurals name="ins_rain_days">
+        <item quantity="one">On %1$d day</item>
+        <item quantity="other">On %1$d days</item>
+    </plurals>
+    <plurals name="ins_rain_months">
+        <item quantity="one">In %1$d month</item>
+        <item quantity="other">In %1$d months</item>
+    </plurals>
+    <string name="ins_rain_tag">Precipitation rhythm</string>
+    <string name="ins_rain_title">Rain &amp; Shelter Encounters</string>
+    <string name="ins_daily_avg">Daily avg</string>
+    <string name="ins_sun_target">Recommended natural daylight is about 60 minutes a day.</string>
+    <string name="ins_none">—</string>
+
+    <!-- Insights -->
+    <string name="range_week">Week</string>
+    <string name="range_month">Month</string>
+    <string name="year_app_name">Aira, the weather you actually felt</string>
+
+    <!-- Timeline redesign -->
+    <string name="tl_first_rain">%1$s at %2$s</string>
+    <string name="tl_summary_today">Today\'s summary</string>
+    <string name="tl_summary_day">Day summary</string>
+    <string name="tl_avg_temp">Avg temp</string>
+    <string name="tl_outdoor_time">Outdoor time</string>
+    <string name="tl_no_rain">No rain</string>
+    <string name="tl_all_logged">All logged</string>
+    <plurals name="tl_showers">
+        <item quantity="one">%1$d shower</item>
+        <item quantity="other">%1$d showers</item>
+    </plurals>
+    <plurals name="tl_entries">
+        <item quantity="one">%1$d entry</item>
+        <item quantity="other">%1$d entries</item>
+    </plurals>
+    <string name="tl_filter_all">All (%1$d)</string>
+    <string name="tl_filter_outdoors">Outdoors (%1$d)</string>
+    <string name="tl_filter_indoors">Indoors (%1$d)</string>
+    <string name="tl_filter_commute">Commute (%1$d)</string>
+    <string name="tl_filter_alerts">Alerts (%1$d)</string>
+    <string name="tl_no_temps">No temperatures yet</string>
+    <string name="tl_day_cool">Cool day</string>
+    <string name="tl_day_mild">Mild day</string>
+    <string name="tl_day_warm">Warm day</string>
+    <string name="tl_day_hot">Hot day</string>
+    <string name="tl_logged_at">Logged at %1$s · Self report</string>
+    <string name="tl_add_note">+ Add note</string>
+    <string name="tl_alert">Weather alert</string>
+    <string name="tl_task_done">Task done</string>
+    <string name="tl_filter_empty">Nothing in this filter for this day.</string>
+
+    <!-- Timeline -->
+    <string name="timeline_empty">No events for this day yet. Aira checks where you are and how you move every 5 minutes.</string>
+    <string name="today">Today</string>
+    <string name="previous_day">Previous day</string>
+    <string name="next_day">Next day</string>
+    <string name="add_note">Add note</string>
+    <string name="note_hint">Note</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Home dashboard -->
+
+    <!-- Event names: %1$s is the part of the day -->
+    <string name="part_morning">Morning</string>
+    <string name="part_afternoon">Afternoon</string>
+    <string name="part_evening">Evening</string>
+    <string name="part_night">Night</string>
+    <string name="title_sun">%1$s sunshine</string>
+    <string name="title_rain">%1$s shower</string>
+    <string name="title_heat">%1$s heat</string>
+    <string name="title_commute">%1$s commute</string>
+    <string name="title_indoor">%1$s indoors</string>
+    <string name="title_outdoor">%1$s outdoors</string>
+    <string name="title_pressure">%1$s pressure drop</string>
+
+    <!-- Locations -->
+    <string name="loc_saved_title">Saved locations (%1$d of %2$d)</string>
+    <string name="loc_saved_empty">No places yet. Add one on the map to check its weather on Home.</string>
+    <string name="loc_title">Locations</string>
+    <string name="loc_count">%1$d of %2$d saved</string>
+    <string name="loc_live">Live location</string>
+    <string name="loc_live_gps">Follows you (GPS)</string>
+    <string name="loc_add">Add location</string>
+    <string name="loc_full">You can save up to 5 places. Delete one to add another.</string>
+    <string name="loc_selected">Shown on Home</string>
+    <string name="loc_delete">Delete %1$s</string>
+    <string name="loc_coordinates">%1$.2f, %2$.2f</string>
+    <string name="loc_search_hint">Search a city or area</string>
+    <string name="loc_no_results">No places found.</string>
+    <string name="loc_pin">Chosen point</string>
+    <string name="loc_move_map">Move the map to put the pin on your place</string>
+    <string name="loc_name">Name this place</string>
+    <string name="loc_name_hint">e.g. College, Grandma\'s house</string>
+    <string name="loc_save">Save location</string>
+    <string name="loc_pinned_place">Pinned place</string>
+    <string name="loc_attribution">© OpenStreetMap contributors</string>
+
+    <!-- Home: right now (personal ambient context) -->
+    <string name="now_title">Personal Ambient Context</string>
+    <string name="now_active">Active %1$s</string>
+    <string name="now_live_sync">Updated %1$s</string>
+    <string name="now_empty">No sensor reading yet. Aira records one in the background, or tap Log Sky Note to take one now.</string>
+    <string name="time_just_now">just now</string>
+    <string name="time_min_ago">%1$dm ago</string>
+    <string name="time_h_ago">%1$dh ago</string>
+    <string name="now_outdoors">Outdoors</string>
+    <string name="now_indoors">Indoors</string>
+    <string name="now_unknown_place">Somewhere</string>
+    <string name="now_walking">Walking</string>
+    <string name="now_still">Still</string>
+    <string name="now_vehicle">Travelling</string>
+    <string name="now_s_walk_out">You\'re walking outside</string>
+    <string name="now_s_out">You\'re outdoors</string>
+    <string name="now_s_walk_in">You\'re walking indoors</string>
+    <string name="now_s_in">You\'re indoors</string>
+    <string name="now_s_vehicle">You\'re on the move</string>
+    <string name="now_s_unknown">Aira could not tell where you are</string>
+    <string name="now_sentence">%1$s.</string>
+    <string name="now_sentence_weather">%1$s. It feels like %2$s with %3$d%% humidity.</string>
+    <string name="tile_daylight">Daylight</string>
+    <string name="tile_microclimate">Temperature</string>
+    <string name="tile_activity">Steps</string>
+    <string name="lux_grouped">%1$,.0f lux</string>
+    <string name="light_strong_sun">Strong sun</string>
+    <string name="light_bright">High natural light</string>
+    <string name="light_indoor">Indoor light</string>
+    <string name="light_dim">Dim light</string>
+    <string name="comfort_cool">Cool</string>
+    <string name="comfort_comfortable">Optimal comfort</string>
+    <string name="comfort_warm">Warm</string>
+    <string name="comfort_hot">Hot</string>
+    <string name="steps_grouped">%1$,d</string>
+    <string name="steps_logged">Steps logged</string>
+
+    <!-- Altitude -->
+    <string name="alt_title">Altitude</string>
+    <string name="alt_you">You are at</string>
+    <string name="alt_ground">Ground level here</string>
+    <string name="alt_ground_short">Ground</string>
+    <string name="alt_metres">%1$d m</string>
+    <string name="alt_feet">%1$d ft</string>
+    <string name="alt_from_barometer">Barometer %1$.1f hPa · sea level %2$.1f hPa</string>
+    <string name="alt_no_barometer">From map data (no recent barometer reading)</string>
+    <string name="alt_saved_place">From map data for this place</string>
+
+    <!-- Compass -->
+    <string name="compass_title">Compass</string>
+    <string name="compass_heading">You are facing</string>
+    <string name="compass_value">%1$d° %2$s</string>
+    <string name="compass_wind">Wind from %1$s (blue dot)</string>
+    <string name="compass_hint">Hold the phone flat for the best reading</string>
+
+    <!-- Home (new design) -->
+    <string name="synced_now">Synced just now</string>
+    <string name="synced_minutes">Synced %1$dm ago</string>
+    <string name="synced_hours">Synced %1$dh ago</string>
+    <string name="wind_caption">%1$s · %2$s</string>
+    <string name="remind_later">Remind in 30m</string>
+    <plurals name="hourly_hours">
+        <item quantity="one">%1$d hour</item>
+        <item quantity="other">%1$d hours</item>
+    </plurals>
+    <string name="air_title">Air Quality</string>
+    <string name="humidity_vs_yesterday">%1$+d%% vs yesterday</string>
+    <string name="uv_advice_low">Low risk outdoors</string>
+    <string name="uv_advice_moderate">Sun protection advised</string>
+    <string name="uv_advice_high">Seek shade at midday</string>
+    <string name="uv_advice_very_high">Avoid the midday sun</string>
+    <string name="wind_calm">Calm air</string>
+    <string name="wind_gentle">Gentle breeze</string>
+    <string name="wind_breezy">Breezy</string>
+    <string name="wind_windy">Windy, hold on to your hat</string>
+    <string name="air_advice_good">Ideal for an outdoor walk</string>
+    <string name="air_advice_moderate">Fine for most people</string>
+    <string name="air_advice_sensitive">Sensitive groups take care</string>
+    <string name="air_advice_unhealthy">Limit time outdoors</string>
+    <string name="air_unavailable">Not available here</string>
+    <string name="details">Details</string>
+    <string name="exp_daylight">Daylight</string>
+    <string name="exp_heat">Heat exp.</string>
+    <string name="exp_rain">Rain enc.</string>
+    <string name="exp_minutes_short">%1$dm</string>
+    <string name="exp_times">%1$d×</string>
+    <string name="exp_goal">Goal %1$dm</string>
+    <string name="exp_cap">Cap %1$dm</string>
+    <string name="exp_rain_caption">Encounters</string>
+    <string name="outdoor_today">Outdoor time today:</string>
+    <string name="vs_yesterday_more">+%1$s vs yesterday</string>
+    <string name="vs_yesterday_less">−%1$s vs yesterday</string>
+    <string name="vs_yesterday_same">Same as yesterday</string>
+    <string name="alert_chance">%1$d%% chance</string>
+    <string name="alert_your_tasks">Your tasks: %1$s</string>
+    <string name="alert_suggested">Suggested: %1$s</string>
+    <string name="acknowledge">Acknowledge</string>
+    <string name="hourly_title">Hourly forecast</string>
+    <string name="now">Now</string>
+    <string name="view_all">View all</string>
+
+    <!-- Home: header and weather -->
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="greeting_with_name">%1$s, %2$s</string>
+    <string name="home_location_device">Current location</string>
+    <string name="home_location_default">Kolkata (default)</string>
+    <string name="home_feels_like">Feels like %1$s</string>
+    <string name="home_high_low">High %1$s · Low %2$s</string>
+    <string name="mini_no_yesterday">No data yesterday</string>
+    <string name="whole_number">%1$.0f</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="uv_level_low">Low</string>
+    <string name="uv_level_moderate">Moderate</string>
+    <string name="uv_level_high">High</string>
+    <string name="uv_level_very_high">Very high</string>
+    <string name="air_good">Good</string>
+    <string name="air_moderate">Moderate</string>
+    <string name="air_sensitive">Unhealthy for some</string>
+    <string name="air_unhealthy">Unhealthy</string>
+
+    <!-- Home: right now -->
+
+    <!-- Home: exposure, alert, diary, log button -->
+    <string name="exposure_title">Today\'s atmospheric exposure</string>
+    <string name="diary_title">Today\'s sky diary</string>
+    <string name="diary_empty">Nothing has been recorded yet today.</string>
+    <string name="event_sun">Strong sun</string>
+    <string name="event_rain">Rain</string>
+    <string name="event_heat">Heat</string>
+    <string name="event_commute">Commute</string>
+    <string name="event_indoor">Indoors</string>
+    <string name="event_outdoor">Outdoors</string>
+    <string name="event_pressure">Falling pressure</string>
+    <string name="log_button">Log Sky Note</string>
+    <string name="log_dialog_title">Log a sky note</string>
+    <string name="log_dialog_body">Aira takes a sensor snapshot now. You can add a note to it.</string>
+    <string name="log_note_hint">Note (optional)</string>
+    <string name="log_save">Save snapshot</string>
+    <string name="log_saved">Snapshot saved.</string>
+    <string name="log_saved_note">Snapshot saved with your note.</string>
+    <string name="log_note_no_event">Snapshot saved. The note could not be attached yet, because today has no timeline event.</string>
+    <string name="log_failed">Could not save: %1$s</string>
+
+    <!-- Onboarding -->
+    <string name="onb_skip">Skip for now</string>
+    <string name="onb_continue">Continue</string>
+    <string name="onb_allow">Allow</string>
+    <string name="onb_get_started">Get started</string>
+    <string name="onb_open_permission">Choose \"Allow all the time\"</string>
+    <string name="onb_open_settings">Open battery settings</string>
+    <string name="onb_start_logging">Start logging</string>
+    <string name="onb_welcome_title">Welcome to Aira</string>
+    <string name="onb_welcome_body">Aira is a diary of the weather you actually experience: where you were, whether you were outside, and what the weather did to you.</string>
+    <string name="onb_why_title">Why Aira needs your location</string>
+    <string name="onb_why_body">Weather changes from place to place. Aira uses your approximate location to fetch the weather where you are. Your data stays on your phone. The only thing sent out is a weather request with a rounded location.</string>
+    <string name="onb_location_title">Approximate location</string>
+    <string name="onb_location_body">Allow location access so Aira can find the weather where you are.</string>
+    <string name="onb_background_title">Location in the background</string>
+    <string name="onb_background_body">To keep your diary while the app is closed, Aira needs location access all the time. On the next screen choose \"Allow all the time\". Without it Aira only records while you have it open.</string>
+    <string name="onb_activity_title">Steps and activity</string>
+    <string name="onb_activity_body">Aira counts your steps to tell whether you were walking or sitting still.</string>
+    <string name="onb_notifications_title">Notifications</string>
+    <string name="onb_notifications_body">Allow notifications so Aira can warn you about rain, heat and strong sun.</string>
+    <string name="onb_battery_title">Keep logging reliable</string>
+    <string name="onb_battery_body">Some phones stop background apps to save battery. Open the battery settings and set Aira to \"Unrestricted\" or turn off battery optimisation so your diary has no gaps. This is optional.</string>
+    <string name="onb_finish_title">You are all set</string>
+    <string name="onb_finish_body">Aira will now check every 5 minutes whether you are indoors or outdoors and walking, still or travelling. Recording pauses at night, from 23:00 to 06:00. You can change this later in Settings.</string>
+
+    <!-- Settings / Sensor Status -->
+    <string name="sensor_status">Sensor Status</string>
+    <string name="sensor_status_summary">See which sensors this phone has and read them now</string>
+    <string name="permissions">Permissions</string>
+    <string name="permissions_granted">Location and activity permissions are granted.</string>
+    <string name="permissions_explanation">Aira uses your approximate location to fetch the weather where you are, and the activity permission to count your steps. Nothing leaves your phone except the weather request.</string>
+    <string name="grant_permissions">Grant permissions</string>
+    <string name="sensors">Sensors</string>
+    <string name="available">Available</string>
+    <string name="missing">Missing</string>
+    <string name="sensor_light">Light</string>
+    <string name="sensor_proximity">Proximity</string>
+    <string name="sensor_steps">Step counter</string>
+    <string name="sensor_accelerometer">Accelerometer</string>
+    <string name="sensor_pressure">Pressure</string>
+    <string name="read_now">Read now</string>
+    <string name="reading">Reading…</string>
+    <string name="readings">Readings</string>
+    <string name="in_pocket">In pocket</string>
+    <string name="movement">Movement</string>
+    <string name="location">Location</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="not_available">n/a</string>
+    <string name="take_snapshot">Take snapshot now</string>
+    <string name="taking_snapshot">Taking snapshot…</string>
+    <string name="snapshot">Saved snapshot</string>
+    <string name="snapshot_failed">Snapshot failed: %1$s</string>
+    <string name="snapshot_saved_at">Saved at</string>
+    <string name="snapshot_place">Place</string>
+    <string name="snapshot_movement">Movement</string>
+    <string name="snapshot_temperature">Temperature</string>
+    <string name="snapshot_steps_delta">Steps since last snapshot</string>
+    <string name="lux_value">%1$.0f lux</string>
+    <string name="hpa_value">%1$.1f hPa</string>
+    <string name="movement_value">%1$.2f m/s²</string>
+    <string name="location_value">%1$.4f, %2$.4f</string>
+
+    <!-- Counts: the wording changes with the number -->
+    <plurals name="export_done">
+        <item quantity="one">Exported %1$d snapshot.</item>
+        <item quantity="other">Exported %1$d snapshots.</item>
+    </plurals>
+    <plurals name="place_use_suggestion">
+        <item quantity="one">Use suggestion (%1$d snapshot)</item>
+        <item quantity="other">Use suggestion (%1$d snapshots)</item>
+    </plurals>
+</resources>

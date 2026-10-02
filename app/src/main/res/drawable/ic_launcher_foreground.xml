@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    App icon artwork: a sun behind a cloud, with a small yellow diary in front.
+    The picture is scaled to stay inside the "safe zone" that every phone's icon mask keeps.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.85"
+        android:scaleY="0.85">
+        <!-- sun -->
+        <path
+            android:fillColor="#FFC107"
+            android:pathData="M42,44m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0" />
+        <!-- cloud -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M34,74a10,10 0 0 1 0 -20a14,14 0 0 1 26 -4a11,11 0 0 1 8 24z" />
+        <!-- diary: cover, spine and two lines of writing -->
+        <path
+            android:fillColor="#FFC107"
+            android:pathData="M60,62h16a3,3 0 0 1 3,3v13a3,3 0 0 1 -3,3h-16z" />
+        <path
+            android:fillColor="#F9A825"
+            android:pathData="M60,62h4v19h-4z" />
+        <path
+            android:fillColor="#991565C0"
+            android:pathData="M67,68h9v2h-9z" />
+        <path
+            android:fillColor="#991565C0"
+            android:pathData="M67,73h9v2h-9z" />
+    </group>
+</vector>

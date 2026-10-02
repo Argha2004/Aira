@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark version of the app's window theme, used when the phone is in dark mode. -->
+    <style name="Theme.Aira" parent="android:Theme.Material.NoActionBar" />
+</resources>
