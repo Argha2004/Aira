@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,24 +15,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Park
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -49,12 +42,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,18 +60,14 @@ import com.aira.app.domain.model.TaskRepeat
 import com.aira.app.domain.model.TaskStatus
 import com.aira.app.domain.model.WeatherTask
 import com.aira.app.ui.components.AiraCard
-import com.aira.app.ui.components.AlertIcon
 import com.aira.app.ui.components.ErrorMessage
 import com.aira.app.ui.components.LoadingIndicator
 import com.aira.app.ui.components.SlideContent
-import com.aira.app.ui.components.StatCard
 import com.aira.app.ui.components.WideButton
 import com.aira.app.ui.components.formatTemperature
 import com.aira.app.ui.components.localizeTemperatures
 import com.aira.app.ui.theme.AiraTheme
 import com.aira.app.ui.theme.HeatCoral
-import com.aira.app.ui.theme.LiveGreen
-import com.aira.app.ui.theme.SunAmber
 import java.text.DateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -222,13 +211,19 @@ private fun LazyListScope.taskSection(
     if (tasks.isEmpty()) return
     item(key = "header-$key") {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-            Text(stringResource(titleRes), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(
+                stringResource(titleRes).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
             val right = noteRes?.let { stringResource(it) } ?: trailingCount?.let { pluralStringResource(R.plurals.tk_remaining, it, it) }
             if (right != null) {
                 Text(
                     right,
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (noteRes != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -262,36 +257,41 @@ private fun timeText(millis: Long): String = DateFormat.getTimeInstance(DateForm
 
 // ---- Top cards and filters ----
 
+/** One plain card: how many alerts are live, and the next weather change (or the next task that is due). */
 @Composable
 private fun TopCards(state: TasksUiState) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        StatCard(
-            label = stringResource(R.string.tk_active_triggers),
-            icon = Icons.Filled.Bolt,
-            tint = MaterialTheme.colorScheme.primary,
-            value = pluralStringResource(R.plurals.tk_live, state.activeAlerts, state.activeAlerts),
-            caption = "",
-            note = stringResource(if (state.activeAlerts > 0) R.string.tk_alerts_on else R.string.tk_all_quiet),
-            noteColor = if (state.activeAlerts > 0) LiveGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        // The next weather change from the forecast; otherwise the next task that is due.
-        val change = state.nextChange
-        val next = state.nextDue
-        StatCard(
-            label = stringResource(R.string.tk_next_change),
-            icon = Icons.Filled.Schedule,
-            tint = SunAmber,
-            value = change?.let { timeText(it.time) } ?: next?.dueTime?.let { timeText(it) } ?: stringResource(R.string.ins_none),
-            caption = "",
-            note = when {
-                change != null -> stringResource(if (change.kind == ChangeKind.RAIN) R.string.tk_change_rain else R.string.tk_change_heat)
-                next != null -> next.title
-                else -> stringResource(R.string.tk_all_clear)
-            },
-            noteColor = SunAmber,
-            modifier = Modifier.weight(1f),
-        )
+    val change = state.nextChange
+    val next = state.nextDue
+    AiraCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SummaryValue(
+                label = stringResource(R.string.tk_active_triggers),
+                value = pluralStringResource(R.plurals.tk_live, state.activeAlerts, state.activeAlerts),
+                caption = stringResource(if (state.activeAlerts > 0) R.string.tk_alerts_on else R.string.tk_all_quiet),
+                modifier = Modifier.weight(1f),
+            )
+            Box(Modifier.width(1.dp).height(44.dp).background(MaterialTheme.colorScheme.outlineVariant))
+            SummaryValue(
+                label = stringResource(R.string.tk_next_change),
+                value = change?.let { timeText(it.time) } ?: next?.dueTime?.let { timeText(it) } ?: stringResource(R.string.ins_none),
+                caption = when {
+                    change != null -> stringResource(if (change.kind == ChangeKind.RAIN) R.string.tk_change_rain else R.string.tk_change_heat)
+                    next != null -> next.title
+                    else -> stringResource(R.string.tk_all_clear)
+                },
+                modifier = Modifier.weight(1f).padding(start = 16.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryValue(label: String, value: String, caption: String, modifier: Modifier = Modifier) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(caption, style = MaterialTheme.typography.labelMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -312,17 +312,12 @@ private fun FilterRow(state: TasksUiState, selected: TaskFilter, onSelect: (Task
                 selected = isSelected,
                 onClick = { onSelect(filter) },
                 label = { Text(stringResource(filterLabel(filter), counts.getValue(filter))) },
-                leadingIcon = if (isSelected) {
-                    { Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp)) }
-                } else {
-                    null
-                },
                 shape = CircleShape,
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedContainerColor = MaterialTheme.colorScheme.onSurface,
+                    selectedLabelColor = MaterialTheme.colorScheme.surface,
                 ),
             )
         }
@@ -340,8 +335,8 @@ private fun filterLabel(filter: TaskFilter): Int = when (filter) {
 // ---- Task card ----
 
 /**
- * One task: checkbox, title, a time badge (red when overdue, amber when due today, blue later), chips for
- * its trigger, outdoor and repeat, and the note.
+ * One task: checkbox, title, the due time (red when overdue), and one grey line with its trigger, note, outdoor
+ * and repeat.
  */
 @Composable
 private fun TaskCard(task: WeatherTask, onToggle: () -> Unit, onEdit: () -> Unit, modifier: Modifier = Modifier) {
@@ -369,27 +364,15 @@ private fun TaskCard(task: WeatherTask, onToggle: () -> Unit, onEdit: () -> Unit
                         )
                     }
                 } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        task.trigger?.let { type ->
-                            TaskChip(stringResource(R.string.tk_trigger, triggerRule(type)), MaterialTheme.colorScheme.primaryContainer) {
-                                AlertIcon(type, Modifier.size(14.dp))
-                            }
-                        }
-                        if (task.note.isNotBlank()) {
-                            TaskChip(localizeTemperatures(task.note), MaterialTheme.colorScheme.surfaceVariant) {
-                                Icon(Icons.Filled.Place, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
-                            }
-                        }
-                        if (task.isOutdoor) {
-                            TaskChip(stringResource(R.string.tk_outdoor), LiveGreen.copy(alpha = 0.14f)) {
-                                Icon(Icons.Filled.Park, null, tint = LiveGreen, modifier = Modifier.size(14.dp))
-                            }
-                        }
-                        if (task.repeat == TaskRepeat.EVERY_TIME) {
-                            TaskChip(stringResource(R.string.tk_every_time), MaterialTheme.colorScheme.surfaceVariant) {
-                                Icon(Icons.Filled.Repeat, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
-                            }
-                        }
+                    val details = taskDetails(task)
+                    if (details.isNotEmpty()) {
+                        Text(
+                            details,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                     if (task.status == TaskStatus.SNOOZED && task.snoozedUntil != null) {
                         Text(
@@ -415,15 +398,15 @@ private fun TimeBadge(due: Long, before: Boolean) {
     val isToday = Instant.ofEpochMilli(due).atZone(zone).toLocalDate() == LocalDate.now(zone)
     val color = when {
         due < now -> HeatCoral
-        isToday -> SunAmber
-        else -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val time = if (isToday) timeText(due) else DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(due))
     Text(
         if (before) stringResource(R.string.tk_before, time) else time,
         style = MaterialTheme.typography.labelMedium,
         color = color,
-        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(color.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 3.dp),
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(start = 8.dp, top = 2.dp),
     )
 }
 
@@ -437,17 +420,14 @@ private fun triggerRule(type: AlertType): String = when (type) {
     AlertType.PRESSURE_DROP -> stringResource(R.string.rule_pressure, Thresholds.PRESSURE_DROP_HPA.toInt())
 }
 
+/** The task's details in one line: "Rain > 60% · Balcony · Outdoor · Every time". */
 @Composable
-private fun TaskChip(text: String, background: Color, icon: @Composable () -> Unit) {
-    Row(
-        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(background).padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        icon()
-        Text(text, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-    }
-}
+private fun taskDetails(task: WeatherTask): String = listOfNotNull(
+    task.trigger?.let { stringResource(R.string.tk_trigger, triggerRule(it)) },
+    task.note.takeIf { it.isNotBlank() }?.let { localizeTemperatures(it) },
+    stringResource(R.string.tk_outdoor).takeIf { task.isOutdoor },
+    stringResource(R.string.tk_every_time).takeIf { task.repeat == TaskRepeat.EVERY_TIME },
+).joinToString(" · ")
 
 // ---- Previews ----
 

@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -158,6 +159,7 @@ private fun MonthHeader(state: CalendarUiState, onPrevious: () -> Unit, onNext: 
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Icon(Icons.Filled.ExpandMore, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
@@ -166,15 +168,17 @@ private fun MonthHeader(state: CalendarUiState, onPrevious: () -> Unit, onNext: 
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onPrevious) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.previous_month)) }
+            // Smaller arrow buttons leave room for the month name on narrow phones.
+            IconButton(onClick = onPrevious, modifier = Modifier.size(40.dp)) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.previous_month)) }
             Text(
                 stringResource(R.string.today),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable(onClick = onToday).padding(horizontal = 14.dp, vertical = 8.dp),
+                modifier = Modifier.clip(CircleShape)
+                    .clickable(onClick = onToday).padding(horizontal = 10.dp, vertical = 8.dp),
+                maxLines = 1,
             )
-            IconButton(onClick = onNext, enabled = !state.isCurrentMonth) {
+            IconButton(onClick = onNext, enabled = !state.isCurrentMonth, modifier = Modifier.size(40.dp)) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.next_month))
             }
         }
@@ -340,7 +344,13 @@ private fun DayCard(date: LocalDate, summary: DaySummary?) {
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(Modifier.width(10.dp))
-                    Text(stringResource(condition.labelRes()), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 6.dp))
+                    Text(
+                        stringResource(condition.labelRes()),
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(bottom = 6.dp).weight(1f, fill = false),
+                    )
                 }
                 Text(
                     if (weather == null) {
@@ -389,8 +399,8 @@ private fun atmosphereText(level: WindLevel): Int = when (level) {
 @Composable
 private fun DayStat(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = valueColor, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = valueColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

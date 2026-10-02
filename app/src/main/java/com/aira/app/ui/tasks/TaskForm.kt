@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aira.app.R
 import com.aira.app.domain.engine.DueTimeBuilder
@@ -136,7 +137,11 @@ fun TaskForm(
                         onClick = { repeat = choice },
                         shape = SegmentedButtonDefaults.itemShape(index, TaskRepeat.entries.size),
                     ) {
-                        Text(stringResource(if (choice == TaskRepeat.ONCE) R.string.task_repeat_once else R.string.task_repeat_every_time))
+                        Text(
+                            stringResource(if (choice == TaskRepeat.ONCE) R.string.task_repeat_once else R.string.task_repeat_every_time),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
             }

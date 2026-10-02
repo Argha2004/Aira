@@ -136,10 +136,11 @@ fun InsightsScreen(
 
 @Composable
 private fun RangeBar(state: InsightsUiState, onChange: (InsightRange) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    // The pill and the date picker are stacked so each gets the full width, even on narrow phones.
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         // A pill with the three choices; the chosen one is filled blue.
         Row(
-            modifier = Modifier.weight(1f).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)).padding(4.dp),
+            modifier = Modifier.fillMaxWidth().clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)).padding(4.dp),
         ) {
             InsightRange.entries.forEach { range ->
                 val selected = range == state.range
@@ -157,15 +158,21 @@ private fun RangeBar(state: InsightsUiState, onChange: (InsightRange) -> Unit, o
         }
         val dates = state.chart?.dates
         Row(
-            modifier = Modifier.clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surface)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large),
+            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large).padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onPrevious, modifier = Modifier.size(36.dp)) {
+            IconButton(onClick = onPrevious, modifier = Modifier.size(40.dp)) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.ins_previous))
             }
-            if (!dates.isNullOrEmpty()) Text(periodText(state.range, dates), style = MaterialTheme.typography.labelMedium, maxLines = 1)
-            IconButton(onClick = onNext, enabled = state.offset > 0, modifier = Modifier.size(36.dp)) {
+            Text(
+                if (dates.isNullOrEmpty()) "" else periodText(state.range, dates),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = onNext, enabled = state.offset > 0, modifier = Modifier.size(40.dp)) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.ins_next))
             }
         }

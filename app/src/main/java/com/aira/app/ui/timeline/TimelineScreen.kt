@@ -294,9 +294,17 @@ private fun SummaryTile(icon: ImageVector, tint: Color, value: String, caption: 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = tint, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(4.dp))
-            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, textAlign = TextAlign.Center)
+        Text(
+            caption,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            minLines = 2,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -384,7 +392,7 @@ private fun TypePill(type: DiaryEventType) {
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         EventIcon(type, Modifier.size(14.dp))
-        Text(stringResource(type.labelRes()), style = MaterialTheme.typography.labelMedium, maxLines = 1)
+        Text(stringResource(type.labelRes()), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -423,14 +431,16 @@ private fun EventCard(item: TimelineItem, onAddNote: () -> Unit) {
     AiraCard {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TypePill(event.type)
-            Text(
-                "${timeText(event.startTime)} – ${timeText(event.endTime)}",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-            )
+            Spacer(Modifier.weight(1f))
             if (event.avgTemperature != 0.0) TempBadge(event.avgTemperature)
         }
+        // On its own line so narrow phones show the whole time range.
+        Text(
+            "${timeText(event.startTime)} – ${timeText(event.endTime)}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
         Text(eventTitle(event.type, event.startTime), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(localizeTemperatures(event.summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         item.notes.forEach { NoteQuote(it) }

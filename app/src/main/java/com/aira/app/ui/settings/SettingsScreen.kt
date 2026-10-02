@@ -509,7 +509,9 @@ private fun ChoiceItem(
                             selected = choice == selected,
                             onClick = { onSelect(choice) },
                             shape = SegmentedButtonDefaults.itemShape(index, choices.size),
-                        ) { Text(label(choice)) }
+                            // No check mark: the fill already shows the choice, and the label keeps room on narrow phones.
+                            icon = {},
+                        ) { Text(label(choice), maxLines = 1, softWrap = false) }
                     }
                 }
             }

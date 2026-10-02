@@ -197,18 +197,23 @@ fun StatCard(
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(
+                value,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
             if (unit != null) {
                 Text(
                     " $unit",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 6.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp).weight(1f, fill = false),
                 )
-            }
-            if (note != null) {
-                Spacer(Modifier.weight(1f))
-                Text(note, style = MaterialTheme.typography.labelMedium, color = noteColor, maxLines = 1, modifier = Modifier.padding(start = 6.dp))
             }
             if (badge != null) {
                 Spacer(Modifier.width(8.dp))
@@ -220,8 +225,13 @@ fun StatCard(
                 )
             }
         }
+        // The note sits under the value so a narrow card never squeezes the two together.
+        if (note != null) {
+            Text(note, style = MaterialTheme.typography.labelMedium, color = noteColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         if (caption.isNotEmpty()) {
-            Text(caption, style = MaterialTheme.typography.labelMedium, color = captionColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            // Two lines so the full caption fits on narrow phones; both cards in a row keep the same height.
+            Text(caption, style = MaterialTheme.typography.labelMedium, color = captionColor, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }

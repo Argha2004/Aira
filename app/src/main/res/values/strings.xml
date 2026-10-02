@@ -366,13 +366,10 @@
     <!-- Altitude -->
     <string name="alt_title">Altitude</string>
     <string name="alt_you">You are at</string>
-    <string name="alt_ground">Ground level here</string>
-    <string name="alt_ground_short">Ground</string>
+    <string name="alt_no_sensor">Pressure Sensor Unavailable</string>
     <string name="alt_metres">%1$d m</string>
     <string name="alt_feet">%1$d ft</string>
     <string name="alt_from_barometer">Barometer %1$.1f hPa · sea level %2$.1f hPa</string>
-    <string name="alt_no_barometer">From map data (no recent barometer reading)</string>
-    <string name="alt_saved_place">From map data for this place</string>
 
     <!-- Compass -->
     <string name="compass_title">Compass</string>
@@ -382,9 +379,6 @@
     <string name="compass_hint">Hold the phone flat for the best reading</string>
 
     <!-- Home (new design) -->
-    <string name="synced_now">Synced just now</string>
-    <string name="synced_minutes">Synced %1$dm ago</string>
-    <string name="synced_hours">Synced %1$dh ago</string>
     <string name="wind_caption">%1$s · %2$s</string>
     <string name="remind_later">Remind in 30m</string>
     <plurals name="hourly_hours">

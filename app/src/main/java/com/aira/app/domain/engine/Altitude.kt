@@ -8,6 +8,9 @@ object Altitude {
     /** A barometer reading older than this is not used for "your altitude now". */
     const val MAX_READING_AGE_MS = 30 * 60 * 1000L
 
+    /** The average sea-level pressure, used when today's value for where the user is not known. */
+    const val STANDARD_SEA_LEVEL_HPA = 1013.25
+
     /**
      * Height above sea level in metres from the phone's barometer [pressureHpa] and today's sea-level pressure
      * [seaLevelHpa] (from the weather service). Air pressure falls by about 1 hPa for every 8 m you climb; this is

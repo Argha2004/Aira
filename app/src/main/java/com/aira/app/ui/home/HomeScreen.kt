@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
@@ -102,6 +103,7 @@ import com.aira.app.domain.model.WeatherCode
 import com.aira.app.domain.model.WeatherNow
 import com.aira.app.domain.model.WeatherTask
 import com.aira.app.domain.engine.Thresholds
+import com.aira.app.ui.components.rememberBarometer
 import com.aira.app.ui.components.AiraCard
 import com.aira.app.ui.components.AnimatedWeatherIcon
 import com.aira.app.ui.components.CompassDial
@@ -211,7 +213,7 @@ fun HomeScreen(
                 WeatherCards(w, state.yesterdayHumidity)
             }
         }
-        (state.weather as? WeatherState.Success)?.let { AltitudeCard(it, state.latest) }
+        (state.weather as? WeatherState.Success)?.let { AltitudeCard(it) }
         CompassCard((state.weather as? WeatherState.Success)?.weather?.windDirection)
         AmbientCard(state.latest, state.today)
         ExposureCard(state.today, state.yesterdayOutdoorMinutes, actions.onOpenInsights)
@@ -261,13 +263,11 @@ private fun MainWeatherCard(state: WeatherState.Success, onPlaceClick: () -> Uni
             Text(
                 state.placeName ?: stringResource(if (state.isDefaultLocation) R.string.home_location_default else R.string.home_location_device),
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
             Icon(Icons.Filled.ExpandMore, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.weight(1f))
-            Text(syncedText(state.updatedAt), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -284,19 +284,10 @@ private fun MainWeatherCard(state: WeatherState.Success, onPlaceClick: () -> Uni
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            AnimatedWeatherIcon(weather.weatherCode, weather.isDay)
+            // A smaller picture on narrow phones so the temperature and text keep their room.
+            val narrow = LocalConfiguration.current.screenWidthDp < 360
+            AnimatedWeatherIcon(weather.weatherCode, weather.isDay, size = if (narrow) 84.dp else 112.dp)
         }
-    }
-}
-
-/** "Synced just now", "Synced 2m ago", "Synced 1h ago". */
-@Composable
-private fun syncedText(millis: Long): String {
-    val minutes = ((System.currentTimeMillis() - millis) / 60_000).toInt().coerceAtLeast(0)
-    return when {
-        minutes < 1 -> stringResource(R.string.synced_now)
-        minutes < 60 -> stringResource(R.string.synced_minutes, minutes)
-        else -> stringResource(R.string.synced_hours, minutes / 60)
     }
 }
 
@@ -426,45 +417,34 @@ private fun ErrorContent(message: String?, onRetry: () -> Unit) {
 // ---- Altitude ----
 
 /**
- * Altitude: "You are at" from the phone's barometer and today's sea-level pressure (only for the live location,
- * with a reading from the last 30 minutes, on phones with a barometer), and "Ground here" from the terrain height
- * the weather service sends. Feet instead of metres when the user chose °F.
+ * The user's live altitude from the phone's barometer, read live while Home is open, with today's sea-level
+ * pressure from the weather service (the standard 1013.25 hPa when Home shows a saved place, since that pressure
+ * is for somewhere else). Phones without a barometer see "Pressure sensor unavailable". Feet when the user chose °F.
  */
 @Composable
-private fun AltitudeCard(state: WeatherState.Success, latest: Snapshot?) {
-    val weather = state.weather
-    val reading = latest?.takeIf {
-        state.placeName == null && it.pressure != null && System.currentTimeMillis() - it.timestamp <= Altitude.MAX_READING_AGE_MS
-    }
-    val barometric = Altitude.fromPressure(reading?.pressure?.toDouble(), weather.pressureHpa)
-    val ground = weather.elevationM?.roundToInt()
-    if (barometric == null && ground == null) return
+private fun AltitudeCard(state: WeatherState.Success) {
+    val barometer = rememberBarometer()
+    val seaLevel = state.weather.pressureHpa.takeIf { state.placeName == null } ?: Altitude.STANDARD_SEA_LEVEL_HPA
+    val metres = Altitude.fromPressure(barometer.pressureHpa?.toDouble(), seaLevel)
     val feet = LocalTemperatureUnit.current == TemperatureUnit.FAHRENHEIT
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
     AiraCard {
         SectionLabel(stringResource(R.string.alt_title))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             IconTile(Icons.Filled.Terrain, MaterialTheme.colorScheme.primary, size = 52)
             Column(modifier = Modifier.weight(1f)) {
+                if (!barometer.available) {
+                    Text(stringResource(R.string.alt_no_sensor), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    return@Column
+                }
+                Text(stringResource(R.string.alt_you), style = MaterialTheme.typography.labelMedium, color = muted)
                 Text(
-                    stringResource(if (barometric != null) R.string.alt_you else R.string.alt_ground),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    metres?.let { heightText(it, feet) } ?: stringResource(R.string.ins_none),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
                 )
-                Text(heightText(barometric ?: ground!!, feet), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                Text(
-                    if (barometric != null) {
-                        stringResource(R.string.alt_from_barometer, reading!!.pressure!!, weather.pressureHpa!!)
-                    } else {
-                        stringResource(if (state.placeName == null) R.string.alt_no_barometer else R.string.alt_saved_place)
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (barometric != null && ground != null) {
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(stringResource(R.string.alt_ground_short), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(heightText(ground, feet), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                barometer.pressureHpa?.let {
+                    Text(stringResource(R.string.alt_from_barometer, it, seaLevel), style = MaterialTheme.typography.labelMedium, color = muted)
                 }
             }
         }
@@ -489,7 +469,7 @@ private fun CompassCard(windFrom: Int?) {
         SectionLabel(stringResource(R.string.compass_title))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             CompassDial(heading, windFrom = windFrom)
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(stringResource(R.string.compass_heading), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     stringResource(R.string.compass_value, heading.roundToInt() % 360, HomeBands.compass(heading.roundToInt())),
@@ -566,10 +546,10 @@ private fun AmbientCard(latest: Snapshot?, today: DailyStats) {
 @Composable
 private fun AmbientValue(label: String, value: String, caption: String?, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (caption != null) {
-            Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
         }
     }
 }
