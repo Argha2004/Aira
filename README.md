@@ -8,7 +8,7 @@
 ![Hilt](https://img.shields.io/badge/DI-Hilt-FF6F00)
 ![Room](https://img.shields.io/badge/DB-Room-4CAF50)
 ![Weather](https://img.shields.io/badge/weather-Open--Meteo-1D5BD6)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.6.0-blue)
 ![No ads](https://img.shields.io/badge/ads%20%26%20tracking-none-success)
 
 <p align="center">
@@ -206,13 +206,13 @@ shrinking can break code that is only used by name.
 - Weather for snapshots taken offline can only be filled in for yesterday and today.
 - The diary and insight sentences are in English.
 
-## Release checksums (v1.0.0)
+## Release checksums (v1.5.2)
 
 Use these to check that an `Aira.apk` you received is the original, untouched release.
 
 | What | SHA-256 |
 | --- | --- |
-| `Aira.apk` (file) | `635c8cabd29d3c1f703fcc8fd842b377737f789d5326d7fba14d07abe92d0105` |
+| `Aira.apk` (file) | `48920620340982ACC01959AFB8A7872A81DBD0BD1FCFAABCCC9EDCD274B5DDC9` |
 | Signing certificate | `bec5c72fd5122895d851999c749a85c5c603110bfcd58cbb1fc10ef466595705` |
 
 Certificate: `CN=Arghadeep Pakhira, OU=Aira, O=Aira, L=Kolaghat, ST=West Bengal, C=IN`.
