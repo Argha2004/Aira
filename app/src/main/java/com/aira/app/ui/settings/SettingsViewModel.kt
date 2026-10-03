@@ -8,7 +8,10 @@ import com.aira.app.data.export.DataExporter
 import com.aira.app.data.location.LocationProvider
 import com.aira.app.data.repository.AlertRepository
 import com.aira.app.data.repository.DiaryRepository
+import com.aira.app.BuildConfig
 import com.aira.app.data.repository.LocationsRepository
+import com.aira.app.data.repository.UpdateRepository
+import com.aira.app.data.repository.UpdateResult
 import com.aira.app.domain.model.CustomLocation
 import com.aira.app.data.repository.SnapshotRepository
 import com.aira.app.data.settings.SettingsStore
@@ -43,6 +46,15 @@ sealed interface DataMessage {
     data object Deleted : DataMessage
 }
 
+/** Where "Check for updates" is: nothing yet, checking, no newer version, a newer version, or it failed. */
+sealed interface UpdateStatus {
+    data object Idle : UpdateStatus
+    data object Checking : UpdateStatus
+    data object UpToDate : UpdateStatus
+    data object Failed : UpdateStatus
+    data class Available(val update: UpdateResult.Available) : UpdateStatus
+}
+
 /** What the Settings screen shows. */
 data class SettingsUiState(
     val loggingEnabled: Boolean = true,
@@ -71,6 +83,7 @@ data class SettingsUiState(
     val userName: String = "",
     /** The places saved on the map (at most 5), listed under Places. */
     val savedLocations: List<CustomLocation> = emptyList(),
+    val update: UpdateStatus = UpdateStatus.Idle,
 )
 
 private const val HOME_LABEL = "Home"
@@ -87,7 +100,24 @@ class SettingsViewModel @Inject constructor(
     private val checkAlerts: CheckAlertsUseCase,
     private val alertRepository: AlertRepository,
     private val locations: LocationsRepository,
+    private val updates: UpdateRepository,
 ) : ViewModel() {
+
+    private val updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
+
+    /** "Check for updates": asks GitHub for the newest release (only when the user taps it). */
+    fun checkForUpdates() {
+        if (updateStatus.value == UpdateStatus.Checking) return
+        updateStatus.value = UpdateStatus.Checking
+        viewModelScope.launch {
+            updateStatus.value = when (val result = updates.check(BuildConfig.VERSION_NAME)) {
+                is UpdateResult.Available -> UpdateStatus.Available(result)
+                UpdateResult.UpToDate -> UpdateStatus.UpToDate
+                UpdateResult.Failed -> UpdateStatus.Failed
+            }
+        }
+    }
+
 
     /** Things that are shown once after an action, not saved settings. */
     private data class Transient(
@@ -143,6 +173,7 @@ class SettingsViewModel @Inject constructor(
             loggingStatus = LoggingReadiness.check(prefs.loggingEnabled, location, background, Build.VERSION.SDK_INT),
         )
     }.combine(locations.saved) { state, saved -> state.copy(savedLocations = saved) }
+        .combine(updateStatus) { state, status -> state.copy(update = status) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     /** Deletes a place saved on the map (Home goes back to the live location if it was showing it). */

@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.aira.app.ui.components.LocalBottomInset
 import com.aira.app.ui.components.LocalOnSky
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
@@ -125,7 +126,7 @@ fun CalendarScreen(
 ) {
     Column(
         modifier = modifier.fillMaxSize()
-            .verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            .verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp + LocalBottomInset.current),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         MonthHeader(state, onPreviousMonth, onNextMonth, onToday)

@@ -366,7 +366,6 @@
     <!-- Altitude -->
     <string name="alt_title">Altitude</string>
     <string name="alt_you">You are at</string>
-    <string name="alt_no_sensor">Pressure Sensor Unavailable</string>
     <string name="alt_metres">%1$d m</string>
     <string name="alt_feet">%1$d ft</string>
     <string name="alt_from_barometer">Barometer %1$.1f hPa · sea level %2$.1f hPa</string>
@@ -553,4 +552,43 @@
     <string name="moon_waning_gibbous">Waning gibbous</string>
     <string name="moon_last_quarter">Last quarter</string>
     <string name="moon_waning_crescent">Waning crescent</string>
+    <!-- Altitude calibration -->
+    <string name="alt_no_sensor">This phone doesn\'t have a pressure sensor</string>
+    <string name="alt_calibrate">Calibrate</string>
+    <string name="alt_calibrated">Calibrated</string>
+    <string name="alt_calibrate_title">Calibrate altitude</string>
+    <string name="alt_calibrate_body">Enter your real height above sea level, for example from a map app or a sign. Aira will correct your phone\'s sensor to match.</string>
+    <string name="alt_calibrate_hint_m">Real height (m)</string>
+    <string name="alt_calibrate_hint_ft">Real height (ft)</string>
+    <string name="alt_calibrate_save">Save</string>
+    <string name="alt_calibrate_reset">Reset</string>
+    <!-- Widget -->
+    <string name="widget_name">Aira weather</string>
+    <string name="widget_description">The weather where you are: temperature, feels like, humidity, wind and UV.</string>
+    <string name="widget_feels_like">Feels like %1$s</string>
+    <string name="widget_hilo">H %1$d° · L %2$d°</string>
+    <string name="widget_humidity">\uD83D\uDCA7 %1$d%%</string>
+    <string name="widget_wind">\uD83D\uDCA8 %1$d km/h</string>
+    <string name="widget_uv">\u2600 UV %1$d</string>
+    <string name="widget_now">Now</string>
+    <string name="widget_updated">Updated %1$s</string>
+    <string name="widget_unavailable">Weather unavailable</string>
+    <string name="widget_tap_to_open">Tap to open Aira</string>
+    <!-- About and updates -->
+    <string name="about_developer">Developer</string>
+    <string name="about_developer_name">Arghadeep Pakhira</string>
+    <string name="about_source">Source code</string>
+    <string name="about_update">Check for updates</string>
+    <string name="update_idle">Looks for a newer version on GitHub</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_up_to_date">You have the latest version</string>
+    <string name="update_failed">Could not check. Are you online?</string>
+    <string name="update_available_short">A new version is available</string>
+    <string name="update_install_hint">Download the file, open it and tap Install. Your data stays on your phone.</string>
+    <string name="update_new">New</string>
+    <string name="update_heading">Update available</string>
+    <string name="update_versions">%1$s  →  %2$s</string>
+    <string name="update_whats_new">What\'s new</string>
+    <string name="update_download">Download update</string>
+    <string name="update_later">Later</string>
 </resources>

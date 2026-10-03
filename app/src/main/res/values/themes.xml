@@ -2,7 +2,9 @@
 <resources>
     <!-- The app's window theme (light). In dark mode values-night/themes.xml takes over, so the window is
          dark instead of flashing white before the screen is drawn. -->
-    <style name="Theme.Aira" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Aira" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 
     <!-- Shown while the app starts: blue background with the icon picture, then switches to Theme.Aira. -->
     <style name="Theme.Aira.Splash" parent="Theme.SplashScreen">

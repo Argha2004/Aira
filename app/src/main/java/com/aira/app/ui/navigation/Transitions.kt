@@ -66,4 +66,17 @@ object Transitions {
     val popExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
         slideOutHorizontally(spec) { width -> width }
     }
+
+    /**
+     * The same two slides for the Android back button and back gesture. Navigation draws its own zoom-out
+     * animation for those unless told otherwise; with these the page slides out to the right (following the finger
+     * on a gesture) exactly like the back arrow in the app. The number is the edge the gesture started from.
+     */
+    val predictivePopEnter: AnimatedContentTransitionScope<NavBackStackEntry>.(Int) -> EnterTransition = {
+        slideInHorizontally(spec) { width -> -width }
+    }
+
+    val predictivePopExit: AnimatedContentTransitionScope<NavBackStackEntry>.(Int) -> ExitTransition = {
+        slideOutHorizontally(spec) { width -> width }
+    }
 }

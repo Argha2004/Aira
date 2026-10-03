@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.LocalBottomInset
 import com.aira.app.ui.components.LocalOnSky
 import com.aira.app.ui.components.pageMutedColor
 import com.aira.app.domain.engine.ChartData
@@ -102,7 +103,7 @@ fun InsightsScreen(
 ) {
     Column(
         modifier = modifier.fillMaxSize()
-            .verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            .verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp + LocalBottomInset.current),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         RangeBar(state, onRangeChange, onPrevious, onNext)

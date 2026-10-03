@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.LocalBottomInset
 import com.aira.app.ui.components.PlainTheme
 import com.aira.app.ui.components.pageMutedColor
 import com.aira.app.domain.engine.Comfort
@@ -149,7 +150,7 @@ fun TimelineScreen(
                 val shown = state.entries.filter { TimelineFilters.matches(it, chip) }
                 // Newest first, like a diary you read from the top.
                 val ordered = shown.sortedByDescending { it.time }
-                LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+                LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp + LocalBottomInset.current)) {
                     item(key = "summary") { SummaryCard(state.isToday, TimelineFilters.summary(state.entries), state.stats) }
                     if (state.entries.isNotEmpty()) item(key = "filters") { FilterRow(state.entries, chip) { filter = it } }
                     if (state.entries.isEmpty()) {

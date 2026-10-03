@@ -3,4 +3,6 @@
     <!-- The app's calm blue: behind the icon and behind the splash screen. -->
     <color name="ic_launcher_background">#1565C0</color>
     <color name="splash_background">#1565C0</color>
+    <!-- The window behind everything: the app's page colour, so no white flashes when the app opens or a page slides. -->
+    <color name="window_background">#EEF3FB</color>
 </resources>

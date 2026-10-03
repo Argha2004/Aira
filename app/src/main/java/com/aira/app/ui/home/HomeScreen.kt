@@ -49,6 +49,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.aira.app.ui.components.LocalBottomInset
+import com.aira.app.ui.components.PlainTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -165,6 +171,8 @@ fun HomeRoute(
             onSelectPlace = viewModel::selectPlace,
             onDeletePlace = viewModel::deletePlace,
             onAddPlace = onAddLocation,
+            onCalibrateAltitude = viewModel::calibrateAltitude,
+            onResetAltitude = viewModel::resetAltitudeCalibration,
         ),
         modifier = modifier,
     )
@@ -182,6 +190,9 @@ data class HomeActions(
     val onSelectPlace: (id: Long?) -> Unit = {},
     val onDeletePlace: (id: Long) -> Unit = {},
     val onAddPlace: () -> Unit = {},
+    /** Altitude calibration: the measured height and the real one (metres), and removing it. */
+    val onCalibrateAltitude: (measuredM: Int, actualM: Int) -> Unit = { _, _ -> },
+    val onResetAltitude: () -> Unit = {},
 )
 
 /**
@@ -202,7 +213,7 @@ fun HomeScreen(
     Column(
         modifier = modifier.fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp + LocalBottomInset.current),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         when (val w = state.weather) {
@@ -219,7 +230,7 @@ fun HomeScreen(
                 MoonCard(sunrise, sunset)
             }
         }
-        (state.weather as? WeatherState.Success)?.let { AltitudeCard(it) }
+        if (state.weather is WeatherState.Success) AltitudeCard(state.liveSeaLevelHpa, state.altitudeOffsetM, actions)
         CompassCard((state.weather as? WeatherState.Success)?.weather?.windDirection)
         AmbientCard(state.latest, state.today)
         ExposureCard(state.today, state.yesterdayOutdoorMinutes, actions.onOpenInsights)
@@ -423,17 +434,20 @@ private fun ErrorContent(message: String?, onRetry: () -> Unit) {
 // ---- Altitude ----
 
 /**
- * The user's live altitude from the phone's barometer, read live while Home is open, with today's sea-level
- * pressure from the weather service (the standard 1013.25 hPa when Home shows a saved place, since that pressure
- * is for somewhere else). Phones without a barometer see "Pressure sensor unavailable". Feet when the user chose °F.
+ * The user's live altitude from the phone's barometer, read live while Home is open, with the sea-level pressure
+ * where the user really is (loaded for the phone's position even when Home shows a saved place; the standard
+ * 1013.25 hPa until it arrives). The user can calibrate it with their real height, which removes the phone's own
+ * barometer error. Phones without a barometer see a message instead. Feet when the user chose °F.
  */
 @Composable
-private fun AltitudeCard(state: WeatherState.Success) {
+private fun AltitudeCard(seaLevelHpa: Double?, offsetM: Int, actions: HomeActions) {
     val barometer = rememberBarometer()
-    val seaLevel = state.weather.pressureHpa.takeIf { state.placeName == null } ?: Altitude.STANDARD_SEA_LEVEL_HPA
-    val metres = Altitude.fromPressure(barometer.pressureHpa?.toDouble(), seaLevel)
+    val seaLevel = seaLevelHpa ?: Altitude.STANDARD_SEA_LEVEL_HPA
+    val measured = Altitude.fromPressure(barometer.pressureHpa?.toDouble(), seaLevel)
+    val shown = measured?.plus(offsetM)
     val feet = LocalTemperatureUnit.current == TemperatureUnit.FAHRENHEIT
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    var calibrating by rememberSaveable { mutableStateOf(false) }
     AiraCard {
         SectionLabel(stringResource(R.string.alt_title))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -445,15 +459,64 @@ private fun AltitudeCard(state: WeatherState.Success) {
                 }
                 Text(stringResource(R.string.alt_you), style = MaterialTheme.typography.labelMedium, color = muted)
                 Text(
-                    metres?.let { heightText(it, feet) } ?: stringResource(R.string.ins_none),
+                    shown?.let { heightText(it, feet) } ?: stringResource(R.string.ins_none),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 barometer.pressureHpa?.let {
                     Text(stringResource(R.string.alt_from_barometer, it, seaLevel), style = MaterialTheme.typography.labelMedium, color = muted)
                 }
+                if (offsetM != 0) Text(stringResource(R.string.alt_calibrated), style = MaterialTheme.typography.labelMedium, color = muted)
             }
         }
+        if (barometer.available && measured != null) {
+            TextButton(onClick = { calibrating = true }) { Text(stringResource(R.string.alt_calibrate)) }
+        }
+    }
+    if (calibrating && measured != null) {
+        CalibrateDialog(
+            feet = feet,
+            calibrated = offsetM != 0,
+            onSave = { actualM -> actions.onCalibrateAltitude(measured, actualM); calibrating = false },
+            onReset = { actions.onResetAltitude(); calibrating = false },
+            onDismiss = { calibrating = false },
+        )
+    }
+}
+
+/** Asks for the user's real height above sea level (m, or ft for °F) and saves the difference. */
+@Composable
+private fun CalibrateDialog(feet: Boolean, calibrated: Boolean, onSave: (metres: Int) -> Unit, onReset: () -> Unit, onDismiss: () -> Unit) {
+    var text by rememberSaveable { mutableStateOf("") }
+    val value = text.trim().toIntOrNull()
+    PlainTheme {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.alt_calibrate_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.alt_calibrate_body), style = MaterialTheme.typography.bodyMedium)
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        label = { Text(stringResource(if (feet) R.string.alt_calibrate_hint_ft else R.string.alt_calibrate_hint_m)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = value != null, onClick = { value?.let { onSave(if (feet) Altitude.toMetres(it) else it) } }) {
+                    Text(stringResource(R.string.alt_calibrate_save))
+                }
+            },
+            dismissButton = {
+                Row {
+                    if (calibrated) TextButton(onClick = onReset) { Text(stringResource(R.string.alt_calibrate_reset)) }
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                }
+            },
+        )
     }
 }
 

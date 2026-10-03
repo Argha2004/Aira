@@ -26,6 +26,7 @@ import com.aira.app.domain.model.WeatherAlert
 import com.aira.app.domain.model.WeatherNow
 import com.aira.app.domain.model.WeatherTask
 import com.aira.app.data.settings.SettingsStore
+import com.aira.app.domain.engine.Altitude
 import com.aira.app.ui.components.CurrentSky
 import com.aira.app.ui.components.SkyCondition
 import com.aira.app.domain.usecase.TakeSnapshotUseCase
@@ -96,6 +97,10 @@ data class HomeUiState(
     val selectedPlaceId: Long? = null,
     /** The current temperature of each saved place (by id), filled in when the locations sheet opens. */
     val placeTemps: Map<Long, Double> = emptyMap(),
+    /** Sea-level pressure (hPa) where the user really is, for the altitude; null until known. */
+    val liveSeaLevelHpa: Double? = null,
+    /** The altitude calibration in metres, 0 when not calibrated. */
+    val altitudeOffsetM: Int = 0,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -157,6 +162,9 @@ class HomeViewModel @Inject constructor(
 
     private val placeTemps = MutableStateFlow<Map<Long, Double>>(emptyMap())
 
+    /** Sea-level pressure at the user's real position, whichever place Home shows. */
+    private val liveSeaLevel = MutableStateFlow<Double?>(null)
+
     private val places = combine(locations.saved, locations.selectedId, placeTemps) { saved, selected, temps ->
         Triple(saved, selected, temps)
     }
@@ -177,7 +185,9 @@ class HomeViewModel @Inject constructor(
             selectedPlaceId = selected,
             placeTemps = temps,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+    }.combine(liveSeaLevel) { state, seaLevel -> state.copy(liveSeaLevelHpa = seaLevel) }
+        .combine(settings.altitudeOffsetM) { state, offset -> state.copy(altitudeOffsetM = offset) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     init {
         // When another place is chosen (here or after adding one on the map), load its weather.
@@ -276,10 +286,28 @@ class HomeViewModel @Inject constructor(
                         hours = ForecastLookup.nextHours(it.forecast, now, HOURS_SHOWN),
                         updatedAt = now,
                     )
+                    // The altitude needs the pressure where the user is, not at the saved place that is shown.
+                    if (chosen == null) liveSeaLevel.value = it.weather.pressureHpa else loadLiveSeaLevel()
                     loadAirQuality(location)
                 }
                 .onFailure { weather.value = WeatherState.Error(it.message) }
         }
+    }
+
+    /** Loads the sea-level pressure at the phone's own position (used while Home shows a saved place). */
+    private suspend fun loadLiveSeaLevel() {
+        val here = locationProvider.getCurrentLocation() ?: return
+        weatherRepository.getWeather(here.latitude, here.longitude).onSuccess { liveSeaLevel.value = it.pressureHpa }
+    }
+
+    /** Calibrates the altitude: the phone measured [measuredM] and the user says the real height is [actualM]. */
+    fun calibrateAltitude(measuredM: Int, actualM: Int) {
+        viewModelScope.launch { settings.setAltitudeOffset(Altitude.offsetFor(measuredM, actualM)) }
+    }
+
+    /** Removes the calibration. */
+    fun resetAltitudeCalibration() {
+        viewModelScope.launch { settings.setAltitudeOffset(0) }
     }
 
     /** The air quality arrives after the weather; if it fails only its card is hidden. */

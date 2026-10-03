@@ -32,6 +32,18 @@ class AltitudeTest {
     }
 
     @Test
+    fun `calibration offset is the real height minus the measured one`() {
+        assertEquals(-15, Altitude.offsetFor(measuredMetres = 25, actualMetres = 10))
+        assertEquals(8, Altitude.offsetFor(measuredMetres = -3, actualMetres = 5))
+    }
+
+    @Test
+    fun `feet to metres`() {
+        assertEquals(100, Altitude.toMetres(328))
+        assertEquals(0, Altitude.toMetres(0))
+    }
+
+    @Test
     fun `metres to feet`() {
         assertEquals(328, Altitude.toFeet(100))
         assertEquals(0, Altitude.toFeet(0))

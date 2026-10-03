@@ -3,6 +3,7 @@ package com.aira.app.di
 import com.aira.app.BuildConfig
 import com.aira.app.data.remote.AirQualityApi
 import com.aira.app.data.remote.GeocodingApi
+import com.aira.app.data.remote.GithubApi
 import com.aira.app.data.remote.OpenMeteoApi
 import dagger.Module
 import dagger.Provides
@@ -51,6 +52,11 @@ object NetworkModule {
     @Singleton
     fun provideGeocodingApi(client: OkHttpClient, json: Json): GeocodingApi =
         retrofit(GeocodingApi.BASE_URL, client, json).create(GeocodingApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideGithubApi(client: OkHttpClient, json: Json): GithubApi =
+        retrofit(GithubApi.BASE_URL, client, json).create(GithubApi::class.java)
 
     private fun retrofit(baseUrl: String, client: OkHttpClient, json: Json): Retrofit =
         Retrofit.Builder()

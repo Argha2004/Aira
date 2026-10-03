@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.LocalBottomInset
 import com.aira.app.ui.components.LocalOnSky
 import com.aira.app.ui.components.PlainTheme
 import com.aira.app.ui.components.pageTextColor
@@ -140,7 +141,7 @@ fun TasksScreen(state: TasksUiState, actions: TasksActions, modifier: Modifier =
     // Another chip slides the list: a chip further right comes in from the right.
     SlideContent(target = filter, forward = { from, to -> to.ordinal > from.ordinal }) { filter ->
     LazyColumn(
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp + LocalBottomInset.current),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when (filter) {

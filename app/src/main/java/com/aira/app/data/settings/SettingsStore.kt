@@ -141,6 +141,11 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
 
     suspend fun setIntervalMinutes(minutes: Int) = context.dataStore.edit { it[INTERVAL_MINUTES] = minutes }
 
+    /** The altitude calibration in metres (added to the barometer's altitude); 0 when not calibrated. */
+    val altitudeOffsetM: Flow<Int> = context.dataStore.data.map { it[ALTITUDE_OFFSET] ?: 0 }
+
+    suspend fun setAltitudeOffset(metres: Int) = context.dataStore.edit { it[ALTITUDE_OFFSET] = metres }
+
     companion object {
         const val DEFAULT_INTERVAL_MINUTES = 5
         const val DEFAULT_COOLDOWN_MINUTES = 180
@@ -149,6 +154,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         private val LOGGING_ENABLED = booleanPreferencesKey("logging_enabled")
         private val INTERVAL_MINUTES = intPreferencesKey("interval_minutes")
         private val USER_NAME = stringPreferencesKey("user_name")
+        private val ALTITUDE_OFFSET = intPreferencesKey("altitude_offset_m")
         private val SELECTED_LOCATION = longPreferencesKey("selected_location_id")
         private val NIGHT_PAUSE =booleanPreferencesKey("night_pause")
         private val USE_FAHRENHEIT = booleanPreferencesKey("use_fahrenheit")

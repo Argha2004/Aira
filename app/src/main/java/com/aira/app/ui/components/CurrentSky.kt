@@ -38,6 +38,12 @@ class CurrentSky @Inject constructor() {
     }
 }
 
+/**
+ * Room to keep free at the bottom of a tab's scrolling content: the floating bottom bar (and the phone's navigation
+ * bar). Pages are full screen and scroll behind the bar; their last item stops above it.
+ */
+val LocalBottomInset = androidx.compose.runtime.compositionLocalOf { androidx.compose.ui.unit.Dp(0f) }
+
 /** True on a page drawn on the sky: text placed straight on the page (not in a card) is white. */
 val LocalOnSky = staticCompositionLocalOf { false }
 

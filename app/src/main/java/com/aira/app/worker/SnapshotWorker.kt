@@ -17,6 +17,7 @@ import com.aira.app.domain.usecase.CheckAlertsUseCase
 import com.aira.app.domain.usecase.NoLocationException
 import com.aira.app.domain.usecase.TakeSnapshotUseCase
 import com.aira.app.domain.usecase.runCatchingCancellable
+import com.aira.app.widget.WeatherWidgetProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.time.LocalDate
@@ -61,6 +62,9 @@ class SnapshotWorker @AssistedInject constructor(
                     .onFailure { Log.e(TAG, "Could not rebuild today's timeline", it) }
                 runCatchingCancellable { checkAlerts() }
                     .onFailure { Log.e(TAG, "Could not check for alerts", it) }
+                // The home-screen widget follows every snapshot.
+                runCatchingCancellable { WeatherWidgetProvider.refreshAll(applicationContext) }
+                    .onFailure { Log.e(TAG, "Could not update the widget", it) }
                 Result.success()
             },
             onFailure = { error ->

@@ -24,4 +24,14 @@ object Altitude {
 
     /** Metres to feet, for people who use °F. */
     fun toFeet(metres: Int): Int = (metres * 3.28084).roundToInt()
+
+    /** Feet to metres, for a height typed in feet. */
+    fun toMetres(feet: Int): Int = (feet / 3.28084).roundToInt()
+
+    /**
+     * Calibration: the user says their real height, [actualMetres], while the phone measured [measuredMetres] (before
+     * any calibration). The difference is saved and added to every later reading, which removes the phone's own
+     * barometer error. Weather changes are still handled by the sea-level pressure, so the offset stays valid.
+     */
+    fun offsetFor(measuredMetres: Int, actualMetres: Int): Int = actualMetres - measuredMetres
 }

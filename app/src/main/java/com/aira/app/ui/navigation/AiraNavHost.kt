@@ -1,13 +1,23 @@
 package com.aira.app.ui.navigation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,18 +30,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
+import com.aira.app.ui.components.LocalBottomInset
 import com.aira.app.ui.components.greetingText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
@@ -43,10 +52,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -61,6 +68,10 @@ import com.aira.app.domain.engine.TemperatureUnit
 import com.aira.app.ui.calendar.CalendarRoute
 import com.aira.app.ui.components.LocalTemperatureUnit
 import com.aira.app.ui.home.HomeRoute
+import com.skydoves.cloudy.Sky
+import com.skydoves.cloudy.cloudy
+import com.skydoves.cloudy.rememberSky
+import com.skydoves.cloudy.sky
 import java.time.LocalTime
 import com.aira.app.ui.home.skyPalette
 import com.aira.app.ui.home.skyBackground
@@ -82,7 +93,6 @@ import com.aira.app.ui.timeline.TimelineRoute
  * bottom bar with 5 tabs, and the screens.
  */
 /** Room for the bottom bar (and the phone's navigation bar) under each page's content. */
-private val LocalBottomBarPadding = compositionLocalOf { 0.dp }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,6 +119,10 @@ fun AiraNavHost(
     val useFahrenheit by rootViewModel.useFahrenheit.collectAsStateWithLifecycle()
     val userName by rootViewModel.userName.collectAsStateWithLifecycle()
     val skyCondition by rootViewModel.sky.collectAsStateWithLifecycle()
+    // Shared with Cloudy: the pages are the source and the bottom bar blurs them.
+    val blurSource = rememberSky()
+    // The pages slide and fade when the tab changes; keep the blur following them while they move.
+    LaunchedEffect(currentRoute) { blurSource.invalidate(durationMillis = 500) }
     val sky = skyCondition?.let { skyPalette(it.weatherCode, it.isDay, LocalTime.now().hour) }
     val temperatureUnit = if (useFahrenheit) TemperatureUnit.FAHRENHEIT else TemperatureUnit.CELSIUS
 
@@ -116,17 +130,31 @@ fun AiraNavHost(
     // Each page draws its own header (inside the NavHost), so the header slides together with its page. Only the
     // bottom bar lives here; it slides down out of view on pages that are not tabs (Settings and its sub-pages).
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        // Pages are full screen: they draw behind the status bar and the navigation bar themselves.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             AnimatedVisibility(
                 visible = onTab && !onOnboarding,
                 enter = slideInVertically { height -> height },
                 exit = slideOutVertically { height -> height },
-            ) { AiraBottomBar(navController, currentRoute, onSky = sky != null) }
+            ) { AiraBottomBar(navController, currentRoute, onSky = sky != null, blurSource = blurSource) }
         },
     ) { padding ->
         // Pages reach the bottom of the screen so the sky shows through the frosted bar; each page keeps its
         // content above the bar with this padding.
-        CompositionLocalProvider(LocalBottomBarPadding provides padding.calculateBottomPadding()) {
+        // The sky is also drawn behind the pages: while one page slides or fades out, the other comes in over the
+        // same sky, so no white (or empty) background shows between them.
+        Box(
+            Modifier.fillMaxSize()
+                .then(if (sky != null && !onOnboarding) Modifier.skyBackground(sky) else Modifier)
+                // Cloudy copies what this box shows (the sky and the cards) so the bar can blur it.
+                .sky(blurSource),
+        ) {
+        // On a tab: the pill's height. Elsewhere there is no pill, only the phone's navigation bar.
+        val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+        val bottomInset = if (onTab) padding.calculateBottomPadding() else navigationBar
+        CompositionLocalProvider(LocalBottomInset provides bottomInset) {
         NavHost(
             navController = navController,
             startDestination = start,
@@ -134,13 +162,15 @@ fun AiraNavHost(
             exitTransition = Transitions.exit,
             popEnterTransition = Transitions.popEnter,
             popExitTransition = Transitions.popExit,
+            predictivePopEnterTransition = Transitions.predictivePopEnter,
+            predictivePopExitTransition = Transitions.predictivePopExit,
         ) {
             val openSettings = { navController.navigate(SETTINGS_ROUTE) }
             val back: () -> Unit = { navController.popBackStack() }
             composable(ONBOARDING_ROUTE) {
                 Box(
                     Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()
-                        .padding(bottom = LocalBottomBarPadding.current),
+                        .navigationBarsPadding(),
                 ) {
                 OnboardingRoute(
                     onFinished = {
@@ -190,6 +220,7 @@ fun AiraNavHost(
             }
         }
         }
+        }
     }
     }
 }
@@ -207,7 +238,7 @@ private fun TabPage(title: String, subtitle: String?, sky: SkyPalette?, onOpenSe
                 .statusBarsPadding(),
         ) {
             TabHeader(title, subtitle, onOpenSettings, onSky = sky != null)
-            Box(modifier = Modifier.weight(1f).padding(bottom = LocalBottomBarPadding.current)) { content() }
+            Box(modifier = Modifier.weight(1f)) { content() }
         }
     }
 }
@@ -251,7 +282,7 @@ private fun SubPage(title: String, onBack: () -> Unit, sky: SkyPalette? = null, 
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             )
-            Box(modifier = Modifier.weight(1f).padding(bottom = LocalBottomBarPadding.current)) { content() }
+            Box(modifier = Modifier.weight(1f).padding(bottom = LocalBottomInset.current)) { content() }
         }
     }
 }
@@ -301,35 +332,54 @@ private fun TabHeader(title: String, subtitle: String?, onOpenSettings: () -> Un
 }
 
 @Composable
-private fun AiraBottomBar(navController: NavHostController, currentRoute: String?, onSky: Boolean) {
-    // On the sky the bar is frosted glass: a see-through white wash with a thin light line on top.
-    val selected = if (onSky) Color.White else MaterialTheme.colorScheme.primary
-    val unselected = if (onSky) Color.White.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
-    NavigationBar(
-        containerColor = if (onSky) Color.Transparent else MaterialTheme.colorScheme.surface,
-        modifier = if (onSky) {
-            Modifier
-                .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.14f))))
-                .drawBehind { drawLine(Color.White.copy(alpha = 0.35f), Offset.Zero, Offset(size.width, 0f), 1.dp.toPx()) }
-        } else {
-            Modifier
-        },
+private fun AiraBottomBar(navController: NavHostController, currentRoute: String?, onSky: Boolean, blurSource: Sky) {
+    // A floating pill. On the sky it is liquid glass: Cloudy blurs the page behind it, and a light wash and a
+    // bright edge on top make it look like a thick piece of glass. Otherwise it is a plain card with a thin edge.
+    val shape = CircleShape
+    val barModifier = if (onSky) {
+        Modifier
+            .clip(shape)
+            .cloudy(sky = blurSource, radius = 28, tint = Color.Black.copy(alpha = 0.10f), shape = shape)
+            .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.26f), Color.White.copy(alpha = 0.08f))))
+            .border(BorderStroke(1.2.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.7f), Color.White.copy(alpha = 0.14f)))), shape)
+    } else {
+        Modifier.shadow(6.dp, shape).clip(shape).background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+    }
+    Box(
+        modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Tab.entries.forEach { tab ->
-            NavigationBarItem(
-                selected = currentRoute == tab.route,
-                onClick = { navController.navigateToTab(tab) },
-                icon = { Icon(tab.icon, contentDescription = null) },
-                label = { Text(stringResource(tab.label), style = MaterialTheme.typography.labelSmall) },
-                // No pill behind the selected tab: its icon and label simply turn blue.
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent,
-                    selectedIconColor = selected,
-                    selectedTextColor = selected,
-                    unselectedIconColor = unselected,
-                    unselectedTextColor = unselected,
-                ),
-            )
+        Row(
+            modifier = barModifier.fillMaxWidth().padding(6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Tab.entries.forEach { tab -> PillTab(tab, selected = currentRoute == tab.route, onSky = onSky) { navController.navigateToTab(tab) } }
+        }
+    }
+}
+
+/** One tab of the pill: just its icon; the chosen tab is a highlighted pill that also shows its name. */
+@Composable
+private fun PillTab(tab: Tab, selected: Boolean, onSky: Boolean, onClick: () -> Unit) {
+    val highlight = if (onSky) Color.White.copy(alpha = 0.28f) else MaterialTheme.colorScheme.primaryContainer
+    val chosen = if (onSky) Color.White else MaterialTheme.colorScheme.primary
+    val idle = if (onSky) Color.White.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val label = stringResource(tab.label)
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(if (selected) highlight else Color.Transparent)
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .animateContentSize()
+            .padding(horizontal = if (selected) 16.dp else 12.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(tab.icon, contentDescription = if (selected) null else label, tint = if (selected) chosen else idle, modifier = Modifier.size(24.dp))
+        if (selected) {
+            Spacer(Modifier.width(8.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = chosen, maxLines = 1)
         }
     }
 }

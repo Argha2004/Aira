@@ -6,22 +6,33 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Card
@@ -32,28 +43,40 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.BuildConfig
 import com.aira.app.R
+import com.aira.app.data.repository.UpdateResult
+import com.aira.app.ui.components.IconTile
 import com.aira.app.ui.components.LocalOnSky
+import com.aira.app.ui.components.WideButton
 import com.aira.app.ui.components.glassSurface
 import com.aira.app.ui.components.PlainTheme
 import com.aira.app.domain.engine.LoggingStatus
@@ -67,6 +90,7 @@ import com.aira.app.domain.model.SavedPlace
 import com.aira.app.ui.components.AlertIcon
 import com.aira.app.ui.components.labelRes
 import com.aira.app.ui.theme.AiraTheme
+import com.aira.app.ui.theme.LiveGreen
 import java.text.DateFormat
 import java.util.Date
 
@@ -102,6 +126,7 @@ data class SettingsActions(
     val onGenerateDemoData: () -> Unit,
     val onFireTestAlert: (AlertType) -> Unit,
     val onNameChange: (String) -> Unit = {},
+    val onCheckUpdate: () -> Unit = {},
 )
 
 /** Connects the screen to its ViewModel and to the system "save file" dialog. */
@@ -151,6 +176,7 @@ fun SettingsRoute(
             onGenerateDemoData = viewModel::generateDemoData,
             onFireTestAlert = viewModel::fireTestAlert,
             onNameChange = viewModel::setUserName,
+            onCheckUpdate = viewModel::checkForUpdates,
         ),
         modifier = modifier,
     )
@@ -177,7 +203,7 @@ fun SettingsScreen(
         SettingsGroup { AlertsSection(state, actions, showDebugTools) }
         SettingsGroup { SensorsSection(actions) }
         SettingsGroup { DataSection(state, actions, onDeleteClick = { confirmDelete = true }, showDebugTools = showDebugTools) }
-        SettingsGroup { AboutSection() }
+        SettingsGroup { AboutSection(state, actions) }
     }
 
     if (confirmDelete) {
@@ -466,7 +492,8 @@ private fun DataSection(state: SettingsUiState, actions: SettingsActions, onDele
 }
 
 @Composable
-private fun AboutSection() {
+private fun AboutSection(state: SettingsUiState, actions: SettingsActions) {
+    val links = LocalUriHandler.current
     SectionHeader(R.string.section_about)
     ListItem(
         headlineContent = { Text(stringResource(R.string.app_name)) },
@@ -477,7 +504,127 @@ private fun AboutSection() {
             }
         },
     )
+    ListItem(
+        headlineContent = { Text(stringResource(R.string.about_developer)) },
+        supportingContent = { Text(stringResource(R.string.about_developer_name)) },
+        leadingContent = { Icon(Icons.Filled.Person, contentDescription = null) },
+    )
+    ListItem(
+        modifier = Modifier.clickable { links.openUri(SOURCE_CODE_URL) },
+        headlineContent = { Text(stringResource(R.string.about_source)) },
+        supportingContent = { Text(SOURCE_CODE_URL.removePrefix("https://")) },
+        leadingContent = { Icon(Icons.Filled.Code, contentDescription = null) },
+        trailingContent = { Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null) },
+    )
+    UpdateRow(state.update, actions.onCheckUpdate)
 }
+
+/**
+ * The "Check for updates" row. Its second line says where things are; when a newer version was found it shows
+ * a small "New" tag, and tapping the row opens the update sheet again.
+ */
+@Composable
+private fun UpdateRow(status: UpdateStatus, onCheck: () -> Unit) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    // The sheet opens by itself when the check finds a newer version.
+    LaunchedEffect(status) { if (status is UpdateStatus.Available) open = true }
+    val checking = status == UpdateStatus.Checking
+    ListItem(
+        modifier = Modifier.clickable(enabled = !checking) { if (status is UpdateStatus.Available) open = true else onCheck() },
+        headlineContent = { Text(stringResource(R.string.about_update)) },
+        supportingContent = {
+            Text(
+                stringResource(
+                    when (status) {
+                        UpdateStatus.Checking -> R.string.update_checking
+                        UpdateStatus.UpToDate -> R.string.update_up_to_date
+                        UpdateStatus.Failed -> R.string.update_failed
+                        is UpdateStatus.Available -> R.string.update_available_short
+                        UpdateStatus.Idle -> R.string.update_idle
+                    },
+                ),
+            )
+        },
+        leadingContent = { Icon(Icons.Filled.SystemUpdate, contentDescription = null) },
+        trailingContent = {
+            when (status) {
+                UpdateStatus.Checking -> CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                UpdateStatus.UpToDate -> Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = LiveGreen)
+                is UpdateStatus.Available -> Text(
+                    stringResource(R.string.update_new),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.primary).padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+                else -> Unit
+            }
+        },
+    )
+    val available = (status as? UpdateStatus.Available)?.update
+    if (open && available != null) UpdateSheet(available) { open = false }
+}
+
+/**
+ * The update, in the app's own card style: an icon, "Update available", the two versions, what is new, a big
+ * Download button and Later.
+ */
+@Composable
+private fun UpdateSheet(update: UpdateResult.Available, onDismiss: () -> Unit) {
+    val links = LocalUriHandler.current
+    PlainTheme {
+        Dialog(onDismissRequest = onDismiss) {
+            Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surface) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    IconTile(Icons.Filled.SystemUpdate, MaterialTheme.colorScheme.primary, size = 56)
+                    Text(stringResource(R.string.update_heading), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.update_versions, BuildConfig.VERSION_NAME, update.version),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer)
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                    )
+                    if (update.notes.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+                                .background(MaterialTheme.colorScheme.surfaceVariant).padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Text(stringResource(R.string.update_whats_new), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Text(
+                                update.notes,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.heightIn(max = 160.dp).verticalScroll(rememberScrollState()),
+                            )
+                        }
+                    }
+                    Text(
+                        stringResource(R.string.update_install_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    WideButton(onClick = { links.openUri(update.apkUrl ?: update.pageUrl); onDismiss() }) {
+                        Icon(Icons.Filled.Download, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.update_download), style = MaterialTheme.typography.titleMedium)
+                    }
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_later)) }
+                }
+            }
+        }
+    }
+}
+
+/** The project on GitHub. */
+private const val SOURCE_CODE_URL = "https://github.com/Argha2004/Aira"
 
 // ---------------------------------------------------------------------------------------------
 // Building blocks
