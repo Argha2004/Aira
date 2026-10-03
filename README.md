@@ -13,7 +13,7 @@
 
 <p align="center">
   <img src="public/Calendar.png" alt="Aira Calendar screen: current weather, air quality, and the right-now sensor card" width="200">
-  <img src="public/Home_Aira.png" alt="Aira Home screen: current weather, air quality, and the right-now sensor card" width="220">
+  <img src="public/Home_Aira.png" alt="Aira Home screen: current weather, air quality, and the right-now sensor card" width="250">
   <img src="public/Insights.png" alt="Aira Insights screen: current weather, air quality, and the right-now sensor card" width="200">
 </p>
 
