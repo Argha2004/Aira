@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.LocalOnSky
+import com.aira.app.ui.components.pageMutedColor
 import com.aira.app.domain.engine.ChartData
 import com.aira.app.domain.engine.PeriodReflection
 import com.aira.app.domain.engine.PeriodReflections
@@ -99,7 +101,7 @@ fun InsightsScreen(
     onNext: () -> Unit = {},
 ) {
     Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+        modifier = modifier.fillMaxSize()
             .verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -140,14 +142,16 @@ private fun RangeBar(state: InsightsUiState, onChange: (InsightRange) -> Unit, o
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         // A pill with the three choices; the chosen one is filled blue.
         Row(
-            modifier = Modifier.fillMaxWidth().clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)).padding(4.dp),
+            modifier = Modifier.fillMaxWidth().clip(CircleShape).background(
+                if (LocalOnSky.current) Color.White.copy(alpha = 0.22f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+            ).padding(4.dp),
         ) {
             InsightRange.entries.forEach { range ->
                 val selected = range == state.range
                 Text(
                     stringResource(rangeLabel(range)),
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary else pageMutedColor(),
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     modifier = Modifier.weight(1f).clip(CircleShape)

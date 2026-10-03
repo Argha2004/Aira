@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.aira.app.ui.components.LocalOnSky
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.pluralStringResource
@@ -53,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.pageTextColor
+import com.aira.app.ui.components.pageMutedColor
 import com.aira.app.domain.engine.DailyStats
 import com.aira.app.domain.engine.DayClassifier
 import com.aira.app.domain.engine.DayCondition
@@ -121,7 +124,7 @@ fun CalendarScreen(
     logButton: @Composable () -> Unit = { LogSkyNoteButton() },
 ) {
     Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+        modifier = modifier.fillMaxSize()
             .verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -311,11 +314,12 @@ private fun DayCondition.icon(): ImageVector? = when (this) {
     DayCondition.NO_DATA -> null
 }
 
+@Composable
 private fun DayCondition.tint(): Color = when (this) {
     DayCondition.SUNNY -> SunAmber
     DayCondition.RAINY -> RainBlue
     DayCondition.HOT -> HeatCoral
-    DayCondition.MOSTLY_INDOORS -> Color(0xFF78909C)
+    DayCondition.MOSTLY_INDOORS -> if (LocalOnSky.current) Color(0xFFDDE6EE) else Color(0xFF78909C)
     DayCondition.NO_DATA -> Color.Transparent
 }
 
@@ -408,15 +412,21 @@ private fun DayStat(label: String, value: String, modifier: Modifier = Modifier,
 private fun LoggedMoments(events: List<DiaryEvent>, onOpenDay: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.cal_logged_moments), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(
+                stringResource(R.string.cal_logged_moments),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = pageTextColor(),
+                modifier = Modifier.weight(1f),
+            )
             Text(
                 pluralStringResource(R.plurals.tl_entries, events.size, events.size),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = pageMutedColor(),
             )
         }
         if (events.isEmpty()) {
-            Text(stringResource(R.string.cal_no_moments), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.cal_no_moments), style = MaterialTheme.typography.bodyMedium, color = pageMutedColor())
         }
         // Tapping a moment opens the day on the Timeline.
         events.forEach { event ->

@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aira.app.R
+import com.aira.app.ui.components.PlainTheme
 import com.aira.app.domain.engine.LocationRules
 import com.aira.app.domain.model.CustomLocation
 import com.aira.app.ui.components.IconTile
@@ -56,6 +57,7 @@ fun LocationsSheet(
     onAdd: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    PlainTheme {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.background) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
@@ -103,6 +105,7 @@ fun LocationsSheet(
                 )
             }
         }
+    }
     }
 }
 

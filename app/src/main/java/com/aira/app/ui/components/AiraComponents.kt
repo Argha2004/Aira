@@ -53,6 +53,15 @@ fun AiraCard(
     containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    if (LocalOnSky.current) {
+        // On the sky: frosted glass.
+        Column(
+            modifier = modifier.fillMaxWidth().glassSurface(MaterialTheme.shapes.large).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content,
+        )
+        return
+    }
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -188,8 +197,12 @@ fun StatCard(
     noteColor: Color = tint,
 ) {
     Column(
-        modifier = modifier.clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large).padding(16.dp),
+        modifier = if (LocalOnSky.current) {
+            modifier.glassSurface(MaterialTheme.shapes.large).padding(16.dp)
+        } else {
+            modifier.clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large).padding(16.dp)
+        },
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -229,10 +242,9 @@ fun StatCard(
         if (note != null) {
             Text(note, style = MaterialTheme.typography.labelMedium, color = noteColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (caption.isNotEmpty()) {
-            // Two lines so the full caption fits on narrow phones; both cards in a row keep the same height.
-            Text(caption, style = MaterialTheme.typography.labelMedium, color = captionColor, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        }
+        // Always two lines, even with no caption: every small card has the same fixed height, so a card with no
+        // data ("—") never shrinks next to its neighbour.
+        Text(caption, style = MaterialTheme.typography.labelMedium, color = captionColor, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

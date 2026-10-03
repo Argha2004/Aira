@@ -53,6 +53,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.LocalOnSky
+import com.aira.app.ui.components.glassSurface
 import com.aira.app.domain.model.GeoPoint
 import com.aira.app.domain.model.PlaceResult
 import com.aira.app.ui.components.WideButton
@@ -95,6 +97,9 @@ fun LocationPickerRoute(onDone: () -> Unit, modifier: Modifier = Modifier, viewM
     )
 }
 
+/** The search box's dark frosted fill on the sky. */
+private val SearchGlass = Color(0xFF14233A).copy(alpha = 0.78f)
+
 @Composable
 private fun LocationPicker(
     state: PickerUiState,
@@ -107,8 +112,13 @@ private fun LocationPicker(
     modifier: Modifier = Modifier,
 ) {
     val map = rememberMapView(start, onCenterChange)
+    val onSky = LocalOnSky.current
     Column(modifier = modifier.fillMaxSize()) {
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+        // On the sky the map is a rounded panel with the sky around it.
+        Box(
+            modifier = Modifier.weight(1f).fillMaxWidth()
+                .then(if (onSky) Modifier.padding(horizontal = 12.dp).glassSurface(MaterialTheme.shapes.large).padding(1.dp).clip(MaterialTheme.shapes.large) else Modifier),
+        ) {
             // The map is a classic Android view. Drawing it in its own Compose layer, clipped to its box, makes it
             // move together with the page when the page slides in or out (opening and going back).
             AndroidView(factory = { map }, modifier = Modifier.fillMaxSize().clipToBounds().graphicsLayer())
@@ -144,7 +154,9 @@ private fun LocationPicker(
 private fun SearchBox(state: PickerUiState, onQueryChange: (String) -> Unit, onResultChosen: (PlaceResult) -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth().shadow(6.dp, MaterialTheme.shapes.large).clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surface),
+            // On the sky: dark frosted glass, so the white text stays readable over the light map.
+            .background(if (LocalOnSky.current) SearchGlass else MaterialTheme.colorScheme.surface)
+            .then(if (LocalOnSky.current) Modifier.glassSurface(MaterialTheme.shapes.large) else Modifier),
     ) {
         TextField(
             value = state.query,
@@ -195,8 +207,12 @@ private fun SearchBox(state: PickerUiState, onQueryChange: (String) -> Unit, onR
 @Composable
 private fun SaveSheet(state: PickerUiState, onNameChange: (String) -> Unit, onSave: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant).padding(16.dp),
+        modifier = if (LocalOnSky.current) {
+            Modifier.fillMaxWidth().padding(12.dp).glassSurface(MaterialTheme.shapes.large).padding(16.dp)
+        } else {
+            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant).padding(16.dp)
+        },
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.loc_move_map), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)

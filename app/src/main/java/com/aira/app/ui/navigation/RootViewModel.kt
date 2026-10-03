@@ -3,6 +3,8 @@ package com.aira.app.ui.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aira.app.data.settings.SettingsStore
+import com.aira.app.ui.components.CurrentSky
+import com.aira.app.ui.components.SkyCondition
 import com.aira.app.worker.WorkScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -20,7 +22,11 @@ import kotlinx.coroutines.launch
 class RootViewModel @Inject constructor(
     settings: SettingsStore,
     scheduler: WorkScheduler,
+    currentSky: CurrentSky,
 ) : ViewModel() {
+
+    /** The weather behind every tab's sky (null until Home has loaded the weather). */
+    val sky: StateFlow<SkyCondition?> = currentSky.current
 
     /** null while the setting is still loading. */
     val onboardingDone: StateFlow<Boolean?> = settings.onboardingDone

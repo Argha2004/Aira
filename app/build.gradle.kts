@@ -22,8 +22,8 @@ android {
         applicationId = "com.aira.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10201
-        versionName = "1.2.1"
+        versionCode = 10502
+        versionName = "1.5.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

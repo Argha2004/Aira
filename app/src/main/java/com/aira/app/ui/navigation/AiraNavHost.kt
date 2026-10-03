@@ -36,12 +36,18 @@ import com.aira.app.ui.components.greetingText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,6 +61,14 @@ import com.aira.app.domain.engine.TemperatureUnit
 import com.aira.app.ui.calendar.CalendarRoute
 import com.aira.app.ui.components.LocalTemperatureUnit
 import com.aira.app.ui.home.HomeRoute
+import java.time.LocalTime
+import com.aira.app.ui.home.skyPalette
+import com.aira.app.ui.home.skyBackground
+import com.aira.app.ui.home.SkyPalette
+import com.aira.app.ui.home.LightStatusBarIcons
+import com.aira.app.ui.components.LocalOnSky
+import com.aira.app.ui.components.LocalPlainColors
+import com.aira.app.ui.components.glassColors
 import com.aira.app.ui.insights.InsightsRoute
 import com.aira.app.ui.locations.LocationPickerRoute
 import com.aira.app.ui.onboarding.OnboardingRoute
@@ -67,6 +81,9 @@ import com.aira.app.ui.timeline.TimelineRoute
  * App shell. First launch shows onboarding; after that: top bar (with gear icon),
  * bottom bar with 5 tabs, and the screens.
  */
+/** Room for the bottom bar (and the phone's navigation bar) under each page's content. */
+private val LocalBottomBarPadding = compositionLocalOf { 0.dp }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiraNavHost(
@@ -91,6 +108,8 @@ fun AiraNavHost(
     val onTab = currentRoute == null || Tab.entries.any { it.route == currentRoute }
     val useFahrenheit by rootViewModel.useFahrenheit.collectAsStateWithLifecycle()
     val userName by rootViewModel.userName.collectAsStateWithLifecycle()
+    val skyCondition by rootViewModel.sky.collectAsStateWithLifecycle()
+    val sky = skyCondition?.let { skyPalette(it.weatherCode, it.isDay, LocalTime.now().hour) }
     val temperatureUnit = if (useFahrenheit) TemperatureUnit.FAHRENHEIT else TemperatureUnit.CELSIUS
 
     CompositionLocalProvider(LocalTemperatureUnit provides temperatureUnit) {
@@ -102,13 +121,15 @@ fun AiraNavHost(
                 visible = onTab && !onOnboarding,
                 enter = slideInVertically { height -> height },
                 exit = slideOutVertically { height -> height },
-            ) { AiraBottomBar(navController, currentRoute) }
+            ) { AiraBottomBar(navController, currentRoute, onSky = sky != null) }
         },
     ) { padding ->
+        // Pages reach the bottom of the screen so the sky shows through the frosted bar; each page keeps its
+        // content above the bar with this padding.
+        CompositionLocalProvider(LocalBottomBarPadding provides padding.calculateBottomPadding()) {
         NavHost(
             navController = navController,
             startDestination = start,
-            modifier = Modifier.padding(padding),
             enterTransition = Transitions.enter,
             exitTransition = Transitions.exit,
             popEnterTransition = Transitions.popEnter,
@@ -117,6 +138,10 @@ fun AiraNavHost(
             val openSettings = { navController.navigate(SETTINGS_ROUTE) }
             val back: () -> Unit = { navController.popBackStack() }
             composable(ONBOARDING_ROUTE) {
+                Box(
+                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()
+                        .padding(bottom = LocalBottomBarPadding.current),
+                ) {
                 OnboardingRoute(
                     onFinished = {
                         navController.navigate(Tab.HOME.route) {
@@ -124,9 +149,10 @@ fun AiraNavHost(
                         }
                     },
                 )
+                }
             }
             composable(Tab.HOME.route) {
-                TabPage(stringResource(R.string.app_name), greetingText(userName), openSettings) {
+                TabPage(stringResource(R.string.app_name), greetingText(userName), sky, openSettings) {
                     HomeRoute(
                         onOpenTimeline = { navController.navigateToTab(Tab.TIMELINE) },
                         onOpenInsights = { navController.navigateToTab(Tab.INSIGHTS) },
@@ -135,21 +161,21 @@ fun AiraNavHost(
                 }
             }
             composable(Tab.TIMELINE.route) {
-                TabPage(stringResource(Tab.TIMELINE.label), null, openSettings) { TimelineRoute() }
+                TabPage(stringResource(Tab.TIMELINE.label), null, sky, openSettings) { TimelineRoute() }
             }
             composable(Tab.CALENDAR.route) {
-                TabPage(stringResource(Tab.CALENDAR.label), null, openSettings) {
+                TabPage(stringResource(Tab.CALENDAR.label), null, sky, openSettings) {
                     CalendarRoute(onOpenTimeline = { navController.navigateToTab(Tab.TIMELINE) })
                 }
             }
             composable(Tab.INSIGHTS.route) {
-                TabPage(stringResource(Tab.INSIGHTS.label), null, openSettings) { InsightsRoute() }
+                TabPage(stringResource(Tab.INSIGHTS.label), null, sky, openSettings) { InsightsRoute() }
             }
             composable(Tab.TASKS.route) {
-                TabPage(stringResource(Tab.TASKS.label), null, openSettings) { TasksRoute() }
+                TabPage(stringResource(Tab.TASKS.label), null, sky, openSettings) { TasksRoute() }
             }
             composable(SETTINGS_ROUTE) {
-                SubPage(stringResource(R.string.settings), back) {
+                SubPage(stringResource(R.string.settings), back, sky) {
                     SettingsRoute(
                         onOpenSensorStatus = { navController.navigate(SENSOR_STATUS_ROUTE) },
                         onAddLocation = { navController.navigate(LOCATION_PICKER_ROUTE) },
@@ -157,11 +183,12 @@ fun AiraNavHost(
                 }
             }
             composable(SENSOR_STATUS_ROUTE) {
-                SubPage(stringResource(R.string.sensor_status), back) { SensorStatusRoute() }
+                SubPage(stringResource(R.string.sensor_status), back, sky) { SensorStatusRoute() }
             }
             composable(LOCATION_PICKER_ROUTE) {
-                SubPage(stringResource(R.string.loc_add), back) { LocationPickerRoute(onDone = back) }
+                SubPage(stringResource(R.string.loc_add), back, sky) { LocationPickerRoute(onDone = back) }
             }
+        }
         }
     }
     }
@@ -169,28 +196,63 @@ fun AiraNavHost(
 
 /** A tab: its big title and gear button on top, then the tab's screen. */
 @Composable
-private fun TabPage(title: String, subtitle: String?, onOpenSettings: () -> Unit, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        TabHeader(title, subtitle, onOpenSettings)
-        Box(modifier = Modifier.weight(1f)) { content() }
+private fun TabPage(title: String, subtitle: String?, sky: SkyPalette?, onOpenSettings: () -> Unit, content: @Composable () -> Unit) {
+    // The weather sky fills the whole screen (status bar and header too) and stays still while the cards scroll.
+    if (sky != null) LightStatusBarIcons()
+    val pageBackground = MaterialTheme.colorScheme.background
+    GlassContent(onSky = sky != null) {
+        Column(
+            modifier = Modifier.fillMaxSize().background(pageBackground)
+                .then(if (sky != null) Modifier.skyBackground(sky) else Modifier)
+                .statusBarsPadding(),
+        ) {
+            TabHeader(title, subtitle, onOpenSettings, onSky = sky != null)
+            Box(modifier = Modifier.weight(1f).padding(bottom = LocalBottomBarPadding.current)) { content() }
+        }
+    }
+}
+
+/**
+ * On the sky every card, chip and bar is glass: [content] gets see-through white surfaces and white text.
+ * Without the sky it is drawn as usual.
+ */
+@Composable
+private fun GlassContent(onSky: Boolean, content: @Composable () -> Unit) {
+    if (!onSky) return content()
+    val plain = MaterialTheme.colorScheme
+    MaterialTheme(colorScheme = glassColors(plain), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+        CompositionLocalProvider(LocalOnSky provides true, LocalPlainColors provides plain, LocalContentColor provides Color.White, content = content)
     }
 }
 
 /** A page opened from a tab (Settings and its sub-pages): a bar with a back arrow and the title, then the page. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SubPage(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        TopAppBar(
-            title = { Text(title) },
-            navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
-            },
-            // The Scaffold already keeps the page below the status bar.
-            windowInsets = WindowInsets(0, 0, 0, 0),
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-        )
-        Box(modifier = Modifier.weight(1f)) { content() }
+private fun SubPage(title: String, onBack: () -> Unit, sky: SkyPalette? = null, content: @Composable () -> Unit) {
+    // With a sky (Settings, Sensor status and Add location) the page is glass like the tabs.
+    if (sky != null) LightStatusBarIcons()
+    val pageBackground = MaterialTheme.colorScheme.background
+    GlassContent(onSky = sky != null) {
+        Column(
+            modifier = Modifier.fillMaxSize().background(pageBackground)
+                .then(if (sky != null) Modifier.skyBackground(sky) else Modifier)
+                .statusBarsPadding(),
+        ) {
+            TopAppBar(
+                title = { Text(title) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
+                },
+                // The page already keeps itself below the status bar.
+                windowInsets = WindowInsets(0, 0, 0, 0),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            )
+            Box(modifier = Modifier.weight(1f).padding(bottom = LocalBottomBarPadding.current)) { content() }
+        }
     }
 }
 
@@ -208,36 +270,51 @@ private fun NavHostController.navigateToTab(tab: Tab) {
  * gear button on the right that opens Settings.
  */
 @Composable
-private fun TabHeader(title: String, subtitle: String?, onOpenSettings: () -> Unit) {
+private fun TabHeader(title: String, subtitle: String?, onOpenSettings: () -> Unit, onSky: Boolean = false) {
+    // On Home's sky the header is see-through with white text.
+    val text = if (onSky) Color.White else MaterialTheme.colorScheme.onSurface
+    val muted = if (onSky) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
+            .background(if (onSky) Color.Transparent else MaterialTheme.colorScheme.background)
             .padding(start = 20.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = text)
             if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1)
             }
         }
         Box(
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface)
+                .background(if (onSky) Color.White.copy(alpha = 0.22f) else MaterialTheme.colorScheme.surface)
                 .clickable(onClick = onOpenSettings),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Filled.Settings, stringResource(R.string.settings), tint = MaterialTheme.colorScheme.onSurface)
+            Icon(Icons.Filled.Settings, stringResource(R.string.settings), tint = text)
         }
     }
 }
 
 @Composable
-private fun AiraBottomBar(navController: NavHostController, currentRoute: String?) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+private fun AiraBottomBar(navController: NavHostController, currentRoute: String?, onSky: Boolean) {
+    // On the sky the bar is frosted glass: a see-through white wash with a thin light line on top.
+    val selected = if (onSky) Color.White else MaterialTheme.colorScheme.primary
+    val unselected = if (onSky) Color.White.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
+    NavigationBar(
+        containerColor = if (onSky) Color.Transparent else MaterialTheme.colorScheme.surface,
+        modifier = if (onSky) {
+            Modifier
+                .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.14f))))
+                .drawBehind { drawLine(Color.White.copy(alpha = 0.35f), Offset.Zero, Offset(size.width, 0f), 1.dp.toPx()) }
+        } else {
+            Modifier
+        },
+    ) {
         Tab.entries.forEach { tab ->
             NavigationBarItem(
                 selected = currentRoute == tab.route,
@@ -247,10 +324,10 @@ private fun AiraBottomBar(navController: NavHostController, currentRoute: String
                 // No pill behind the selected tab: its icon and label simply turn blue.
                 colors = NavigationBarItemDefaults.colors(
                     indicatorColor = Color.Transparent,
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedIconColor = selected,
+                    selectedTextColor = selected,
+                    unselectedIconColor = unselected,
+                    unselectedTextColor = unselected,
                 ),
             )
         }

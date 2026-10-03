@@ -198,9 +198,11 @@ fun HomeScreen(
     logButton: @Composable () -> Unit = { LogSkyNoteButton() },
 ) {
     var showPlaces by rememberSaveable { mutableStateOf(false) }
+    // The page sits on the weather sky drawn by the tab page; the main card is frosted glass over it.
     Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+        modifier = modifier.fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         when (val w = state.weather) {
@@ -211,6 +213,10 @@ fun HomeScreen(
             is WeatherState.Success -> {
                 MainWeatherCard(w, onPlaceClick = { actions.onOpenPlaces(); showPlaces = true })
                 WeatherCards(w, state.yesterdayHumidity)
+                val sunrise = w.weather.sunrise
+                val sunset = w.weather.sunset
+                if (sunrise != null && sunset != null) SunCard(sunrise, sunset)
+                MoonCard(sunrise, sunset)
             }
         }
         (state.weather as? WeatherState.Success)?.let { AltitudeCard(it) }
@@ -247,7 +253,7 @@ fun HomeScreen(
 @Composable
 private fun MainWeatherCard(state: WeatherState.Success, onPlaceClick: () -> Unit) {
     val weather = state.weather
-    AiraCard {
+    GlassCard {
         // Tapping the place opens the locations sheet.
         Row(
             modifier = Modifier.clip(MaterialTheme.shapes.small).clickable(onClick = onPlaceClick),
@@ -548,9 +554,8 @@ private fun AmbientValue(label: String, value: String, caption: String?, modifie
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (caption != null) {
-            Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
-        }
+        // Always the caption's room, so the three values keep the same height when one has no caption.
+        Text(caption.orEmpty(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, minLines = 2, maxLines = 2)
     }
 }
 

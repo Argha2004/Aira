@@ -537,4 +537,20 @@
         <item quantity="one">Use suggestion (%1$d snapshot)</item>
         <item quantity="other">Use suggestion (%1$d snapshots)</item>
     </plurals>
+    <!-- Sun and moon -->
+    <string name="sun_title">Sun</string>
+    <string name="sun_rise">Sunrise</string>
+    <string name="sun_set">Sunset</string>
+    <string name="moon_title">Moon</string>
+    <string name="moon_rise">Moonrise (approx.)</string>
+    <string name="moon_set">Moonset (approx.)</string>
+    <string name="moon_lit">%1$d%% lit</string>
+    <string name="moon_new">New moon</string>
+    <string name="moon_waxing_crescent">Waxing crescent</string>
+    <string name="moon_first_quarter">First quarter</string>
+    <string name="moon_waxing_gibbous">Waxing gibbous</string>
+    <string name="moon_full">Full moon</string>
+    <string name="moon_waning_gibbous">Waning gibbous</string>
+    <string name="moon_last_quarter">Last quarter</string>
+    <string name="moon_waning_crescent">Waning crescent</string>
 </resources>

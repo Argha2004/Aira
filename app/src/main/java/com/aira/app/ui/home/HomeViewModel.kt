@@ -26,6 +26,8 @@ import com.aira.app.domain.model.WeatherAlert
 import com.aira.app.domain.model.WeatherNow
 import com.aira.app.domain.model.WeatherTask
 import com.aira.app.data.settings.SettingsStore
+import com.aira.app.ui.components.CurrentSky
+import com.aira.app.ui.components.SkyCondition
 import com.aira.app.domain.usecase.TakeSnapshotUseCase
 import com.aira.app.domain.usecase.TaskActions
 import com.aira.app.domain.usecase.runCatchingCancellable
@@ -110,6 +112,7 @@ class HomeViewModel @Inject constructor(
     private val locations: LocationsRepository,
     private val takeSnapshot: TakeSnapshotUseCase,
     private val settings: SettingsStore,
+    private val currentSky: CurrentSky,
 ) : ViewModel() {
 
     private val weather = MutableStateFlow<WeatherState>(WeatherState.Loading)
@@ -263,6 +266,7 @@ class HomeViewModel @Inject constructor(
                     // Keep the air quality only while it is still the same place.
                     val previousAir = (weather.value as? WeatherState.Success)?.takeIf { old -> old.location == location }?.air
                     val now = System.currentTimeMillis()
+                    currentSky.update(SkyCondition(it.weather.weatherCode, it.weather.isDay))
                     weather.value = WeatherState.Success(
                         weather = it.weather,
                         location = location,

@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -52,6 +53,9 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.BuildConfig
 import com.aira.app.R
+import com.aira.app.ui.components.LocalOnSky
+import com.aira.app.ui.components.glassSurface
+import com.aira.app.ui.components.PlainTheme
 import com.aira.app.domain.engine.LoggingStatus
 import com.aira.app.domain.engine.PlaceCandidate
 import com.aira.app.domain.engine.PlaceSuggestions
@@ -177,6 +181,7 @@ fun SettingsScreen(
     }
 
     if (confirmDelete) {
+        PlainTheme {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text(stringResource(R.string.delete_confirm_title)) },
@@ -189,6 +194,7 @@ fun SettingsScreen(
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
         )
+        }
     }
 }
 
@@ -199,6 +205,15 @@ fun SettingsScreen(
 /** A white rounded card around one section. The rows inside bring their own padding. */
 @Composable
 private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
+    if (LocalOnSky.current) {
+        // On the sky: frosted glass, like the cards on the tabs.
+        // The rows inside are list items, which paint the surface colour: clear here so only the card is frosted.
+        val clearRows = MaterialTheme.colorScheme.copy(surface = Color.Transparent)
+        MaterialTheme(colorScheme = clearRows, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+            Column(modifier = Modifier.fillMaxWidth().glassSurface(MaterialTheme.shapes.large).padding(bottom = 8.dp), content = content)
+        }
+        return
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,

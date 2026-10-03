@@ -31,6 +31,7 @@ fun ErrorMessage(modifier: Modifier = Modifier) {
         Text(
             text = stringResource(R.string.error_loading),
             style = MaterialTheme.typography.bodyLarge,
+            color = pageTextColor(),
             textAlign = TextAlign.Center,
         )
     }

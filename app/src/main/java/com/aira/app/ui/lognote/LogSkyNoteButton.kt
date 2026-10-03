@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.PlainTheme
 import com.aira.app.ui.components.WideButton
 
 /**
@@ -74,6 +75,7 @@ fun LogSkyNoteButton(modifier: Modifier = Modifier, viewModel: LogNoteViewModel 
 
     if (showDialog) {
         var note by remember { mutableStateOf("") }
+        PlainTheme {
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = { Text(stringResource(R.string.log_dialog_title)) },
@@ -96,5 +98,6 @@ fun LogSkyNoteButton(modifier: Modifier = Modifier, viewModel: LogNoteViewModel 
             },
             dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.cancel)) } },
         )
+        }
     }
 }

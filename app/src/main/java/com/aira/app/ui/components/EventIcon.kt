@@ -73,15 +73,19 @@ fun eventTitle(type: DiaryEventType, startMillis: Long): String {
     )
 }
 
-/** The colour of an event type, shared by its icon and its tile. */
-fun DiaryEventType.tint(): Color = when (this) {
-    DiaryEventType.SUN -> Color(0xFFF9A825)
-    DiaryEventType.RAIN -> Color(0xFF1E88E5)
-    DiaryEventType.HEAT -> Color(0xFFE64A19)
-    DiaryEventType.COMMUTE -> Color(0xFF6D4C41)
-    DiaryEventType.INDOOR -> Color(0xFF78909C)
-    DiaryEventType.OUTDOOR -> Color(0xFF43A047)
-    DiaryEventType.PRESSURE_DROP -> Color(0xFF8E24AA)
+/** The colour of an event type, shared by its icon and its tile; lighter on the glass pages. */
+@Composable
+fun DiaryEventType.tint(): Color {
+    val glass = LocalOnSky.current
+    return when (this) {
+        DiaryEventType.SUN -> if (glass) Color(0xFFFFD166) else Color(0xFFF9A825)
+        DiaryEventType.RAIN -> if (glass) Color(0xFFA8D4FF) else Color(0xFF1E88E5)
+        DiaryEventType.HEAT -> if (glass) Color(0xFFFFA48C) else Color(0xFFE64A19)
+        DiaryEventType.COMMUTE -> if (glass) Color(0xFFE6C2A8) else Color(0xFF6D4C41)
+        DiaryEventType.INDOOR -> if (glass) Color(0xFFDDE6EE) else Color(0xFF78909C)
+        DiaryEventType.OUTDOOR -> if (glass) Color(0xFF7CF0B4) else Color(0xFF43A047)
+        DiaryEventType.PRESSURE_DROP -> if (glass) Color(0xFFE1B3FF) else Color(0xFF8E24AA)
+    }
 }
 
 /**

@@ -21,11 +21,16 @@ private fun AlertType.imageVector(): ImageVector = when (this) {
     AlertType.PRESSURE_DROP -> Icons.Filled.Compress
 }
 
-private fun AlertType.tint(): Color = when (this) {
-    AlertType.RAIN_SOON, AlertType.RAIN_NOW -> Color(0xFF1E88E5)
-    AlertType.HEAT -> Color(0xFFE64A19)
-    AlertType.STRONG_SUN -> Color(0xFFF9A825)
-    AlertType.PRESSURE_DROP -> Color(0xFF8E24AA)
+/** The colour of an alert type; lighter on the glass pages so it stands out on the blue-grey glass. */
+@Composable
+private fun AlertType.tint(): Color {
+    val glass = LocalOnSky.current
+    return when (this) {
+        AlertType.RAIN_SOON, AlertType.RAIN_NOW -> if (glass) Color(0xFFA8D4FF) else Color(0xFF1E88E5)
+        AlertType.HEAT -> if (glass) Color(0xFFFFA48C) else Color(0xFFE64A19)
+        AlertType.STRONG_SUN -> if (glass) Color(0xFFFFD166) else Color(0xFFF9A825)
+        AlertType.PRESSURE_DROP -> if (glass) Color(0xFFE1B3FF) else Color(0xFF8E24AA)
+    }
 }
 
 /** The words for an alert type, e.g. in the "Remind me when" list. */

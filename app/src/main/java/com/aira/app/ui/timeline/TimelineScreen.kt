@@ -65,6 +65,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.PlainTheme
+import com.aira.app.ui.components.pageMutedColor
 import com.aira.app.domain.engine.Comfort
 import com.aira.app.domain.engine.DailyStats
 import com.aira.app.domain.engine.HomeBands
@@ -131,7 +133,7 @@ fun TimelineScreen(
     var noteEventId by remember { mutableStateOf<Long?>(null) }
     var filter by rememberSaveable { mutableStateOf(TimelineFilter.ALL) }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = modifier.fillMaxSize()) {
         DateBar(state.date, state.isToday, onPreviousDay, onNextDay)
         when {
             state.isLoading -> LoadingIndicator()
@@ -172,13 +174,15 @@ fun TimelineScreen(
     }
 
     noteEventId?.let { eventId ->
-        AddNoteDialog(
-            onDismiss = { noteEventId = null },
-            onSave = { text ->
-                onAddNote(eventId, text)
-                noteEventId = null
-            },
-        )
+        PlainTheme {
+            AddNoteDialog(
+                onDismiss = { noteEventId = null },
+                onSave = { text ->
+                    onAddNote(eventId, text)
+                    noteEventId = null
+                },
+            )
+        }
     }
 }
 
@@ -187,7 +191,7 @@ private fun EmptyText(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = pageMutedColor(),
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
     )
@@ -213,16 +217,6 @@ private fun DateBar(date: LocalDate, isToday: Boolean, onPrevious: () -> Unit, o
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (isToday) {
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    stringResource(R.string.today).uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                )
-            }
         }
         IconButton(onClick = onNext, enabled = !isToday) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.next_day))

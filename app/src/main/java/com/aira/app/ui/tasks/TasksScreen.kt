@@ -52,6 +52,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aira.app.R
+import com.aira.app.ui.components.LocalOnSky
+import com.aira.app.ui.components.PlainTheme
+import com.aira.app.ui.components.pageTextColor
+import com.aira.app.ui.components.pageMutedColor
 import com.aira.app.domain.engine.ChangeKind
 import com.aira.app.domain.engine.TaskGroups
 import com.aira.app.domain.engine.Thresholds
@@ -125,7 +129,7 @@ fun TasksScreen(state: TasksUiState, actions: TasksActions, modifier: Modifier =
     }
 
     val groups = state.groups
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = modifier.fillMaxSize()) {
     Column(
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -158,9 +162,10 @@ fun TasksScreen(state: TasksUiState, actions: TasksActions, modifier: Modifier =
                             Text(
                                 stringResource(R.string.tk_completed, state.done.size),
                                 style = MaterialTheme.typography.titleSmall,
+                                color = pageTextColor(),
                                 modifier = Modifier.weight(1f),
                             )
-                            Icon(if (doneExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
+                            Icon(if (doneExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null, tint = pageTextColor())
                         }
                     }
                     if (doneExpanded) taskItems("done", state.done, actions, edit)
@@ -184,6 +189,7 @@ fun TasksScreen(state: TasksUiState, actions: TasksActions, modifier: Modifier =
     }
 
     if (showSheet) {
+        PlainTheme {
         ModalBottomSheet(onDismissRequest = { showSheet = false }) {
             TaskForm(
                 task = sheetTask,
@@ -191,6 +197,7 @@ fun TasksScreen(state: TasksUiState, actions: TasksActions, modifier: Modifier =
                 onSave = { actions.onSave(it); showSheet = false },
                 onDelete = { id -> actions.onDelete(id); showSheet = false },
             )
+        }
         }
     }
 }
@@ -215,7 +222,7 @@ private fun LazyListScope.taskSection(
                 stringResource(titleRes).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = pageMutedColor(),
                 modifier = Modifier.weight(1f),
             )
             val right = noteRes?.let { stringResource(it) } ?: trailingCount?.let { pluralStringResource(R.plurals.tk_remaining, it, it) }
@@ -223,7 +230,7 @@ private fun LazyListScope.taskSection(
                 Text(
                     right,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = pageMutedColor(),
                 )
             }
         }
@@ -250,7 +257,7 @@ private fun LazyListScope.filtered(tasks: List<WeatherTask>, actions: TasksActio
 
 @Composable
 private fun EmptyText(textRes: Int) {
-    Text(stringResource(textRes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(stringResource(textRes), style = MaterialTheme.typography.bodyMedium, color = pageMutedColor())
 }
 
 private fun timeText(millis: Long): String = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(millis))
@@ -317,7 +324,8 @@ private fun FilterRow(state: TasksUiState, selected: TaskFilter, onSelect: (Task
                     containerColor = MaterialTheme.colorScheme.surface,
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     selectedContainerColor = MaterialTheme.colorScheme.onSurface,
-                    selectedLabelColor = MaterialTheme.colorScheme.surface,
+                    // On the sky the chosen chip is white, so its text is dark.
+                    selectedLabelColor = if (LocalOnSky.current) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.surface,
                 ),
             )
         }
