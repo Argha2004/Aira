@@ -5,11 +5,26 @@ object Thresholds {
     // Indoor / outdoor (light sensor)
     const val OUTDOOR_LUX = 1000f
     const val INDOOR_LUX = 300f
+
+    /** On a clear, sunny day outdoors is far brighter; a reading below this is more likely a bright room by a window. */
+    const val OUTDOOR_LUX_CLEAR_SKY = 5000f
+
+    /** How long the light sensor is listened to; the typical (median) reading of that time is used. */
+    const val LUX_SAMPLE_MS = 1500L
     const val STRONG_SUN_LUX = 30_000f
 
     // Movement
     const val WALKING_STEPS = 20
     const val VEHICLE_DISTANCE_KM = 1.0
+
+    /** A vehicle is also faster than walking: at least this average speed between two snapshots. */
+    const val VEHICLE_MIN_SPEED_KMH = 10.0
+
+    /** A steady walk (not a few steps around the house): at least this many steps per minute on average. */
+    const val STEADY_WALK_STEPS_PER_MIN = 60.0
+
+    /** Moving at least this far while walking means the user left the building. */
+    const val LEFT_BUILDING_KM = 0.2
 
     /** Minutes a snapshot stands for: until the next one, at most 60; the last one of a day counts 30. */
     const val MAX_SNAPSHOT_MINUTES = 60.0

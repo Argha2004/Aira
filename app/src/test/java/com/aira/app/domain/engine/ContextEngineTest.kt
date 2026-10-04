@@ -14,7 +14,10 @@ class ContextEngineTest {
         day: Boolean = true,
         previous: Place? = null,
         movement: Movement = Movement.STILL,
-    ) = ContextEngine.classifyPlace(lux, inPocket, day, previous, movement)
+        stepsPerMinute: Double? = null,
+        movedKm: Double? = null,
+        clearSky: Boolean = false,
+    ) = ContextEngine.classifyPlace(lux, inPocket, day, previous, movement, stepsPerMinute, movedKm, clearSky)
 
     // ---- classifyPlace: light rules ----
 
@@ -61,12 +64,30 @@ class ContextEngineTest {
     // ---- classifyPlace: resolving unknown by movement ----
 
     @Test
-    fun `unknown while walking becomes outdoor`() =
-        assertEquals(Place.OUTDOOR, place(lux = 500f, previous = Place.INDOOR, movement = Movement.WALKING))
+    fun `unknown during a steady walk becomes outdoor`() =
+        assertEquals(Place.OUTDOOR, place(lux = 500f, previous = Place.INDOOR, movement = Movement.WALKING, stepsPerMinute = 90.0))
 
     @Test
-    fun `in pocket while walking becomes outdoor`() =
-        assertEquals(Place.OUTDOOR, place(lux = null, inPocket = true, movement = Movement.WALKING))
+    fun `in pocket during a steady walk becomes outdoor`() =
+        assertEquals(Place.OUTDOOR, place(lux = null, inPocket = true, movement = Movement.WALKING, stepsPerMinute = 100.0))
+
+    @Test
+    fun `walking 200 m or more becomes outdoor even at a slow pace`() =
+        assertEquals(Place.OUTDOOR, place(lux = null, inPocket = true, previous = Place.INDOOR, movement = Movement.WALKING, stepsPerMinute = 10.0, movedKm = 0.3))
+
+    @Test
+    fun `a few steps around the house keep the previous place`() =
+        assertEquals(Place.INDOOR, place(lux = null, inPocket = true, previous = Place.INDOOR, movement = Movement.WALKING, stepsPerMinute = 12.0, movedKm = 0.0))
+
+    @Test
+    fun `on a clear day 2000 lux is a bright room, not outdoors`() =
+        assertEquals(Place.INDOOR, place(lux = 2000f, previous = Place.INDOOR, clearSky = true))
+
+    @Test
+    fun `on a clear day 5000 lux is outdoors`() = assertEquals(Place.OUTDOOR, place(lux = 5000f, clearSky = true))
+
+    @Test
+    fun `on a cloudy day 2000 lux is outdoors`() = assertEquals(Place.OUTDOOR, place(lux = 2000f, clearSky = false))
 
     @Test
     fun `unknown in a vehicle keeps previous place`() =
@@ -96,6 +117,33 @@ class ContextEngineTest {
 
     @Test
     fun `missing steps and distance is still`() = assertEquals(Movement.STILL, ContextEngine.classifyMovement(null, null))
+
+    @Test
+    fun `a far jump at walking speed is not a vehicle`() =
+        assertEquals(Movement.STILL, ContextEngine.classifyMovement(0, 1.5, minutes = 60.0))
+
+    @Test
+    fun `far and fast is a vehicle`() = assertEquals(Movement.VEHICLE, ContextEngine.classifyMovement(0, 3.0, minutes = 5.0))
+
+    @Test
+    fun `steps per minute`() {
+        assertEquals(30.0, ContextEngine.stepsPerMinute(150, 5.0)!!, 0.001)
+        assertNull(ContextEngine.stepsPerMinute(null, 5.0))
+        assertNull(ContextEngine.stepsPerMinute(10, 0.0))
+    }
+
+    @Test
+    fun `typical lux skips the first value and takes the median`() {
+        assertEquals(20_000f, ContextEngine.typicalLux(listOf(0f, 19_000f, 20_000f, 21_000f))!!, 0.1f)
+        assertEquals(550f, ContextEngine.typicalLux(listOf(0f, 500f, 50_000f, 400f, 600f))!!, 0.1f)
+    }
+
+    @Test
+    fun `typical lux of one or two values`() {
+        assertEquals(300f, ContextEngine.typicalLux(listOf(300f))!!, 0.1f)
+        assertEquals(250f, ContextEngine.typicalLux(listOf(200f, 300f))!!, 0.1f)
+        assertNull(ContextEngine.typicalLux(emptyList()))
+    }
 
     @Test
     fun `missing step counter but large distance is a vehicle`() =

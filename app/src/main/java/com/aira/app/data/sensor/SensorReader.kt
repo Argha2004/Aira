@@ -1,5 +1,7 @@
 package com.aira.app.data.sensor
 
+import com.aira.app.domain.engine.ContextEngine
+import com.aira.app.domain.engine.Thresholds
 import com.aira.app.domain.usecase.SensorSource
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,8 +22,15 @@ import kotlinx.coroutines.withTimeoutOrNull
 @Singleton
 class SensorReader @Inject constructor(private val subscriber: SensorSubscriber) : SensorSource {
 
-    /** Ambient light in lux. */
-    override suspend fun readLux(): Float? = readFirst(SensorKind.LIGHT)?.get(0)
+    /**
+     * Ambient light in lux: the sensor is listened to for a moment and the typical value is used (see
+     * [ContextEngine.typicalLux]). The light sensor only reports changes, so in steady light one value is enough.
+     */
+    override suspend fun readLux(): Float? {
+        val samples = mutableListOf<Float>()
+        withTimeoutOrNull(Thresholds.LUX_SAMPLE_MS) { values(SensorKind.LIGHT).collect { samples += it[0] } }
+        return ContextEngine.typicalLux(samples) ?: readFirst(SensorKind.LIGHT)?.get(0)
+    }
 
     /** True when the proximity sensor is covered (phone in pocket or bag). */
     override suspend fun readInPocket(): Boolean? {

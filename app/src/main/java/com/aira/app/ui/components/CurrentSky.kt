@@ -15,27 +15,25 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.aira.app.data.settings.SettingsStore
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /** The weather the sky behind the tabs is drawn from: an Open-Meteo weather code and day or night. */
 data class SkyCondition(val weatherCode: Int, val isDay: Boolean)
 
 /**
- * The weather Home last loaded, shared with every tab so they all show the same sky. Null until the first
- * weather arrives (the tabs then use the plain background).
+ * The weather Home last loaded, shared with every tab so they all show the same sky. It is saved, so when the app
+ * opens the last sky is there at once instead of a plain page while the new weather loads. Null only on the very
+ * first start (the tabs then use the plain background).
  */
 @Singleton
-class CurrentSky @Inject constructor() {
-    private val condition = MutableStateFlow<SkyCondition?>(null)
-    val current: StateFlow<SkyCondition?> = condition.asStateFlow()
+class CurrentSky @Inject constructor(private val settings: SettingsStore) {
+    val current: Flow<SkyCondition?> = settings.lastSky.map { saved -> saved?.let { (code, day) -> SkyCondition(code, day) } }
 
-    fun update(value: SkyCondition) {
-        condition.value = value
-    }
+    suspend fun update(value: SkyCondition) = settings.setLastSky(value.weatherCode, value.isDay)
 }
 
 /**

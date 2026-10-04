@@ -11,6 +11,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -25,11 +26,19 @@ class RootViewModel @Inject constructor(
     currentSky: CurrentSky,
 ) : ViewModel() {
 
-    /** The weather behind every tab's sky (null until Home has loaded the weather). */
-    val sky: StateFlow<SkyCondition?> = currentSky.current
+    /**
+     * The two things the first screen needs, read together: whether onboarding is done and the saved sky. The app
+     * draws nothing until both are known, so it never opens on a plain page and then switches to the sky.
+     */
+    private val startup = combine(settings.onboardingDone, currentSky.current) { done, sky -> done to sky }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** null while the setting is still loading. */
-    val onboardingDone: StateFlow<Boolean?> = settings.onboardingDone
+    val onboardingDone: StateFlow<Boolean?> = startup.map { it?.first }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** The weather behind every tab's sky (the saved one at first, then what Home loads). */
+    val sky: StateFlow<SkyCondition?> = startup.map { it?.second }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** °F instead of °C; every screen reads this through a CompositionLocal. */

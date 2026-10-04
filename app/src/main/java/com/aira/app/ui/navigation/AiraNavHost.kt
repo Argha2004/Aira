@@ -1,5 +1,6 @@
 package com.aira.app.ui.navigation
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,11 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
@@ -36,8 +37,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import com.aira.app.ui.components.LocalBottomInset
@@ -93,6 +96,9 @@ import com.aira.app.ui.timeline.TimelineRoute
  * bottom bar with 5 tabs, and the screens.
  */
 /** Room for the bottom bar (and the phone's navigation bar) under each page's content. */
+
+/** The dark tint inside the glass bar, so it stands apart from the sky behind it. */
+private val GlassTint = Color(0xFF0B1A33).copy(alpha = 0.10f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -338,10 +344,22 @@ private fun AiraBottomBar(navController: NavHostController, currentRoute: String
     val shape = CircleShape
     val barModifier = if (onSky) {
         Modifier
+            // A soft shadow lifts the bar off the page so it never melts into the background.
+            .shadow(14.dp, shape, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.30f))
             .clip(shape)
-            .cloudy(sky = blurSource, radius = 28, tint = Color.Black.copy(alpha = 0.10f), shape = shape)
-            .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.26f), Color.White.copy(alpha = 0.08f))))
-            .border(BorderStroke(1.2.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.7f), Color.White.copy(alpha = 0.14f)))), shape)
+            // The page behind, strongly blurred and slightly darkened: the body of the glass.
+            .cloudy(sky = blurSource, radius = 40, tint = GlassTint, shape = shape)
+            // A light wash, brighter at the top left.
+            .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.34f), Color.White.copy(alpha = 0.16f))))
+            // A glossy band along the top half, like light caught in thick glass.
+            .drawBehind {
+                drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.30f), Color.Transparent), endY = size.height * 0.55f))
+            }
+            // A bright rim on top and a fainter one below: the edge of the glass.
+            .border(
+                BorderStroke(1.5.dp, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.35f)))),
+                shape,
+            )
     } else {
         Modifier.shadow(6.dp, shape).clip(shape).background(MaterialTheme.colorScheme.surface)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
@@ -355,31 +373,45 @@ private fun AiraBottomBar(navController: NavHostController, currentRoute: String
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Tab.entries.forEach { tab -> PillTab(tab, selected = currentRoute == tab.route, onSky = onSky) { navController.navigateToTab(tab) } }
+            Tab.entries.forEach { tab ->
+                val selected = currentRoute == tab.route
+                // Each tab has a fixed share of the bar; the chosen one gets more for its name. So no tab is ever
+                // squeezed smaller than the others, whichever is chosen.
+                val share by animateFloatAsState(if (selected) 2.4f else 1f, label = "tabShare")
+                PillTab(tab, selected = selected, onSky = onSky, modifier = Modifier.weight(share)) { navController.navigateToTab(tab) }
+            }
         }
     }
 }
 
 /** One tab of the pill: just its icon; the chosen tab is a highlighted pill that also shows its name. */
 @Composable
-private fun PillTab(tab: Tab, selected: Boolean, onSky: Boolean, onClick: () -> Unit) {
+private fun PillTab(tab: Tab, selected: Boolean, onSky: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val highlight = if (onSky) Color.White.copy(alpha = 0.28f) else MaterialTheme.colorScheme.primaryContainer
     val chosen = if (onSky) Color.White else MaterialTheme.colorScheme.primary
     val idle = if (onSky) Color.White.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
     val label = stringResource(tab.label)
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(CircleShape)
             .background(if (selected) highlight else Color.Transparent)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
-            .animateContentSize()
-            .padding(horizontal = if (selected) 16.dp else 12.dp, vertical = 12.dp),
+            .padding(horizontal = 10.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(tab.icon, contentDescription = if (selected) null else label, tint = if (selected) chosen else idle, modifier = Modifier.size(24.dp))
+        Icon(tab.icon, contentDescription = if (selected) null else label, tint = if (selected) chosen else idle, modifier = Modifier.size(24.dp).requiredSize(24.dp))
         if (selected) {
-            Spacer(Modifier.width(8.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = chosen, maxLines = 1)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = chosen,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

@@ -141,6 +141,16 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
 
     suspend fun setIntervalMinutes(minutes: Int) = context.dataStore.edit { it[INTERVAL_MINUTES] = minutes }
 
+    /** The last weather Home loaded (weather code, day or night), so the next start shows its sky at once. */
+    val lastSky: Flow<Pair<Int, Boolean>?> = context.dataStore.data.map { prefs ->
+        prefs[LAST_SKY_CODE]?.let { code -> code to (prefs[LAST_SKY_DAY] ?: true) }
+    }
+
+    suspend fun setLastSky(weatherCode: Int, isDay: Boolean) = context.dataStore.edit {
+        it[LAST_SKY_CODE] = weatherCode
+        it[LAST_SKY_DAY] = isDay
+    }
+
     /** The altitude calibration in metres (added to the barometer's altitude); 0 when not calibrated. */
     val altitudeOffsetM: Flow<Int> = context.dataStore.data.map { it[ALTITUDE_OFFSET] ?: 0 }
 
@@ -155,6 +165,8 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         private val INTERVAL_MINUTES = intPreferencesKey("interval_minutes")
         private val USER_NAME = stringPreferencesKey("user_name")
         private val ALTITUDE_OFFSET = intPreferencesKey("altitude_offset_m")
+        private val LAST_SKY_CODE = intPreferencesKey("last_sky_code")
+        private val LAST_SKY_DAY = booleanPreferencesKey("last_sky_day")
         private val SELECTED_LOCATION = longPreferencesKey("selected_location_id")
         private val NIGHT_PAUSE =booleanPreferencesKey("night_pause")
         private val USE_FAHRENHEIT = booleanPreferencesKey("use_fahrenheit")

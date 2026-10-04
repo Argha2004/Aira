@@ -59,13 +59,17 @@ class SensorReaderTest {
     }
 
     @Test
-    fun `only the first value is used`() = runTest {
+    fun `light is the typical value of a short window, skipping the first`() = runTest {
         val result = async { reader.readLux() }
         runCurrent()
-        phone.emit(SensorKind.LIGHT, 10f)
-        phone.emit(SensorKind.LIGHT, 99f)
+        // Many phones first report an old value (here 0), then the real light.
+        phone.emit(SensorKind.LIGHT, 0f)
+        phone.emit(SensorKind.LIGHT, 500f)
+        phone.emit(SensorKind.LIGHT, 520f)
+        phone.emit(SensorKind.LIGHT, 510f)
         advanceUntilIdle()
-        assertEquals(10f, result.await())
+        assertEquals(510f, result.await())
+        assertEquals(0, phone.active)
     }
 
     @Test

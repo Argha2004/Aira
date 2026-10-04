@@ -65,11 +65,22 @@ class TakeSnapshotUseCase(
         val stepBaseline = previous?.totalSteps ?: lastKnownTotalSteps(now)
         val stepsDelta = ContextEngine.stepsSince(steps, stepBaseline)
         val distanceKm = previous?.let { GeoMath.distanceKm(GeoPoint(it.latitude, it.longitude), point) }
-        val movement = ContextEngine.classifyMovement(stepsDelta, distanceKm)
+        val minutes = previous?.let { (now - it.timestamp) / 60_000.0 }
+        val movement = ContextEngine.classifyMovement(stepsDelta, distanceKm, minutes)
         val luxValue = lux.await()
         val pocket = inPocket.await()
         val isDaytime = weatherNow?.isDay ?: NightPause.isDaytimeByClock(hourOf(now))
-        val place = ContextEngine.classifyPlace(luxValue, pocket, isDaytime, previous?.place, movement)
+        val place = ContextEngine.classifyPlace(
+            lux = luxValue,
+            inPocket = pocket,
+            isDaytime = isDaytime,
+            previousPlace = previous?.place,
+            movement = movement,
+            stepsPerMinute = ContextEngine.stepsPerMinute(stepsDelta, minutes),
+            movedKm = distanceKm,
+            // Clear sky or mainly clear (weather codes 0 and 1).
+            clearSky = weatherNow?.weatherCode?.let { it <= 1 } ?: false,
+        )
 
         val snapshot = Snapshot(
             timestamp = now,

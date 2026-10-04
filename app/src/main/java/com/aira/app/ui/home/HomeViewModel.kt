@@ -269,29 +269,44 @@ class HomeViewModel @Inject constructor(
         if (weather.value !is WeatherState.Success) weather.value = WeatherState.Loading
         viewModelScope.launch {
             val chosen = locations.selectedId.first()?.let { locations.get(it) }
+            // A fresh GPS fix can take several seconds. On the first load, show the weather where the newest snapshot
+            // was taken straight away; the exact place follows a moment later.
+            var quick = false
+            if (chosen == null && weather.value !is WeatherState.Success) {
+                snapshots.getLatest()?.let { quick = show(GeoPoint(it.latitude, it.longitude), null, isDefault = false) }
+            }
             val deviceLocation = if (chosen == null) locationProvider.getCurrentLocation() else null
             val location = chosen?.let { GeoPoint(it.latitude, it.longitude) } ?: deviceLocation ?: KOLKATA
-            weatherRepository.getBundle(location.latitude, location.longitude)
-                .onSuccess {
-                    // Keep the air quality only while it is still the same place.
-                    val previousAir = (weather.value as? WeatherState.Success)?.takeIf { old -> old.location == location }?.air
-                    val now = System.currentTimeMillis()
-                    currentSky.update(SkyCondition(it.weather.weatherCode, it.weather.isDay))
-                    weather.value = WeatherState.Success(
-                        weather = it.weather,
-                        location = location,
-                        isDefaultLocation = chosen == null && deviceLocation == null,
-                        placeName = chosen?.name,
-                        air = previousAir,
-                        hours = ForecastLookup.nextHours(it.forecast, now, HOURS_SHOWN),
-                        updatedAt = now,
-                    )
-                    // The altitude needs the pressure where the user is, not at the saved place that is shown.
-                    if (chosen == null) liveSeaLevel.value = it.weather.pressureHpa else loadLiveSeaLevel()
-                    loadAirQuality(location)
-                }
-                .onFailure { weather.value = WeatherState.Error(it.message) }
+            val shown = show(location, chosen, isDefault = chosen == null && deviceLocation == null)
+            // Keep the quick weather on screen if the exact one failed; otherwise say what went wrong.
+            if (!shown && !quick) weather.value = WeatherState.Error(lastError)
         }
+    }
+
+    private var lastError: String? = null
+
+    /** Loads and shows the weather for [location]; false (with [lastError] set) when it could not be loaded. */
+    private suspend fun show(location: GeoPoint, chosen: CustomLocation?, isDefault: Boolean): Boolean {
+        val result = weatherRepository.getBundle(location.latitude, location.longitude)
+        result.onSuccess {
+            // Keep the air quality only while it is still the same place.
+            val previousAir = (weather.value as? WeatherState.Success)?.takeIf { old -> old.location == location }?.air
+            val now = System.currentTimeMillis()
+            currentSky.update(SkyCondition(it.weather.weatherCode, it.weather.isDay))
+            weather.value = WeatherState.Success(
+                weather = it.weather,
+                location = location,
+                isDefaultLocation = isDefault,
+                placeName = chosen?.name,
+                air = previousAir,
+                hours = ForecastLookup.nextHours(it.forecast, now, HOURS_SHOWN),
+                updatedAt = now,
+            )
+            // The altitude needs the pressure where the user is, not at the saved place that is shown.
+            if (chosen == null) liveSeaLevel.value = it.weather.pressureHpa else loadLiveSeaLevel()
+            loadAirQuality(location)
+        }.onFailure { lastError = it.message }
+        return result.isSuccess
     }
 
     /** Loads the sea-level pressure at the phone's own position (used while Home shows a saved place). */

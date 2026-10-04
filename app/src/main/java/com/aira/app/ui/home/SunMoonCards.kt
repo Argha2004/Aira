@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.res.stringResource
@@ -142,15 +143,21 @@ fun MoonCard(sunrise: Long?, sunset: Long?) {
 }
 
 /**
- * The moon disc: a dim full circle, then the lit part on top. The lit part is half the disc on the lit side plus
- * (or minus) a half-ellipse whose width follows cos(age angle): a thin crescent, a half at the quarters, nearly
- * full near full moon. A waning moon is the same shape mirrored.
+ * The moon disc, drawn to look like the real one:
+ * - the dark side is not black but faintly lit (earthshine), with its seas just visible;
+ * - the lit part is half the disc on the lit side plus (or minus) a half-ellipse whose width follows cos(age angle):
+ *   a thin crescent, a half at the quarters, nearly full near full moon;
+ * - on the lit part: a soft shading that is darker towards the edge, the grey "seas" (maria) at roughly their real
+ *   places, a few craters with a light rim, and the bright crater Tycho near the bottom.
+ * A waning moon has the same lit shape mirrored, but the seas stay where they are on the real moon.
  */
 private fun DrawScope.drawMoon(moon: MoonInfo, glow: Float) {
     val radius = size.minDimension / 2 * 0.82f
     val c = center
-    drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = glow), Color.Transparent), c, radius * 1.25f), radius * 1.25f, c)
-    drawCircle(Color(0xFF3A4458), radius, c)
+    drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = glow), Color.Transparent), c, radius * 1.3f), radius * 1.3f, c)
+    // Earthshine on the dark side.
+    drawCircle(Brush.radialGradient(listOf(Color(0xFF3A4254), Color(0xFF1E2431)), c, radius), radius, c)
+    drawSeas(c, radius, mirror = 1f, alpha = 0.10f)
 
     val fraction = moon.ageDays / SkyEvents.SYNODIC_MONTH_DAYS
     val shapeFraction = if (moon.waxing) fraction else 1 - fraction
@@ -163,14 +170,68 @@ private fun DrawScope.drawMoon(moon: MoonInfo, glow: Float) {
         arcTo(ellipse, 90f, if (k > 0) -180f else 180f, forceMoveTo = false)
         close()
     }
-    scale(if (moon.waxing) 1f else -1f, 1f, pivot = c) {
-        drawPath(lit, Color(0xFFF1F3F8))
+    val mirror = if (moon.waxing) 1f else -1f
+    scale(mirror, 1f, pivot = c) {
+        clipPath(lit) {
+            // Brightest towards the sun, a little darker at the edge of the disc (limb darkening).
+            drawCircle(
+                Brush.radialGradient(
+                    listOf(Color(0xFFFDFDFB), Color(0xFFE9EAEC), Color(0xFFC4C7CE)),
+                    center = Offset(c.x + radius * 0.25f, c.y - radius * 0.15f),
+                    radius = radius * 1.35f,
+                ),
+                radius,
+                c,
+            )
+            // Drawn inside the mirrored frame, so positions are mirrored back to keep the seas in place.
+            drawSeas(c, radius, mirror, alpha = 0.55f)
+            drawCraters(c, radius, mirror)
+        }
     }
-    // A few soft craters.
-    val crater = Color(0xFF8A93A6).copy(alpha = 0.22f)
-    drawCircle(crater, radius * 0.16f, Offset(c.x - radius * 0.3f, c.y - radius * 0.25f))
-    drawCircle(crater, radius * 0.11f, Offset(c.x + radius * 0.28f, c.y + radius * 0.3f))
-    drawCircle(crater, radius * 0.08f, Offset(c.x + radius * 0.05f, c.y - radius * 0.5f))
+    // A thin soft rim around the whole disc.
+    drawCircle(Color.White.copy(alpha = 0.10f), radius, c, style = Stroke(1.dp.toPx()))
+}
+
+/** A point on the moon: [dx] and [dy] are fractions of the radius from the centre (x mirrored when needed). */
+private fun moonPoint(c: Offset, radius: Float, mirror: Float, dx: Float, dy: Float) = Offset(c.x + mirror * dx * radius, c.y + dy * radius)
+
+/** The large dark plains, roughly where they are on the near side of the moon. */
+private fun DrawScope.drawSeas(c: Offset, radius: Float, mirror: Float, alpha: Float) {
+    val sea = Color(0xFF7E838F).copy(alpha = alpha)
+    // (x, y, size) as fractions of the radius.
+    val seas = listOf(
+        Triple(-0.22f, -0.38f, 0.30f), // Mare Imbrium
+        Triple(0.18f, -0.30f, 0.20f), // Mare Serenitatis
+        Triple(0.30f, -0.02f, 0.24f), // Mare Tranquillitatis
+        Triple(0.62f, -0.22f, 0.13f), // Mare Crisium
+        Triple(-0.52f, -0.02f, 0.30f), // Oceanus Procellarum
+        Triple(-0.12f, 0.12f, 0.16f), // Mare Nubium area
+        Triple(0.40f, 0.30f, 0.16f), // Mare Fecunditatis
+        Triple(0.10f, 0.20f, 0.12f), // Mare Nectaris
+    )
+    seas.forEach { (x, y, size) ->
+        val p = moonPoint(c, radius, mirror, x, y)
+        drawCircle(Brush.radialGradient(listOf(sea, sea.copy(alpha = alpha * 0.4f), Color.Transparent), p, radius * size), radius * size, p)
+    }
+}
+
+/** A few craters (a darker floor with a light rim) and the bright young crater Tycho. */
+private fun DrawScope.drawCraters(c: Offset, radius: Float, mirror: Float) {
+    val floor = Color(0xFF9DA2AC).copy(alpha = 0.45f)
+    val rim = Color.White.copy(alpha = 0.55f)
+    listOf(
+        Triple(-0.05f, -0.62f, 0.06f),
+        Triple(0.55f, 0.48f, 0.05f),
+        Triple(-0.45f, 0.42f, 0.07f),
+        Triple(0.30f, -0.60f, 0.045f),
+        Triple(-0.70f, -0.35f, 0.05f),
+    ).forEach { (x, y, size) ->
+        val p = moonPoint(c, radius, mirror, x, y)
+        drawCircle(floor, radius * size, p)
+        drawCircle(rim, radius * size, p, style = Stroke(radius * size * 0.25f))
+    }
+    val tycho = moonPoint(c, radius, mirror, -0.12f, 0.62f)
+    drawCircle(Brush.radialGradient(listOf(Color.White, Color.White.copy(alpha = 0f)), tycho, radius * 0.14f), radius * 0.14f, tycho)
 }
 
 private fun phaseName(phase: MoonPhase): Int = when (phase) {
