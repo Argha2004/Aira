@@ -236,9 +236,9 @@ the same key.
 
 | Name                | Role                      |
 |---------------------|---------------------------|
-| *Arghadeep Pakhira* | UI , Sensors and Logic    |
-| *Shubham Bhunia*    | Sensors and logic         |
-| *Ankita Chanda*     | Data and background       |
-| *Arghya Pramanik*   | Testing and documentation |
+| *Arghadeep Pakhira* | Code , Android Studio, UI, Testing    |
+| *Shubham Bhunia*    | Sensors and logic, Architechture , Testing        |
+| *Ankita Chanda*     | Data and background , API      |
+| *Arghya Pramanik*   | Weather Report Collection, Testing and documentation |
 
 Course: *Mobile Computing*. Year: *2026*.
